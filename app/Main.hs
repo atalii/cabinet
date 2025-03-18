@@ -107,7 +107,7 @@ buildIndex :: Maybe T.Text -> [C.IndexEntry] -> H.Html
 buildIndex uploadStatus idx = layout "Cabinet" $ statusView uploadStatus >> uploadFormView >> indexView
   where
     statusView Nothing = mempty
-    statusView (Just msg) = H.div $ H.toHtml msg
+    statusView (Just msg) = H.div H.! A.class_ "status" $ H.toHtml msg
 
     uploadFormView =
       H.form H.! A.action "/files/upload" H.! A.method "post" H.! A.enctype "multipart/form-data" $
