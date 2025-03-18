@@ -1,10 +1,10 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Main where
 
 -- TODO:
--- + GC, push to GH (today)
 -- + basic stylesheet via static server middleware (tomorrow)
 -- + refactoring, general cleaning of web stuff (tomorrow)
 -- + deploy (wednesday)
@@ -13,6 +13,7 @@ import Control.Monad (void)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Cabinet as C
+import Data.FileEmbed (embedFileRelative)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as E
 import qualified Data.Text.Lazy as L
@@ -24,6 +25,9 @@ import Text.Blaze.Html.Renderer.Text (renderHtml)
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
 import Web.Scotty
+
+styleSheet :: B.ByteString
+styleSheet = $(embedFileRelative "static/styles.css")
 
 data UploadResult = UploadOk | UploadEmpty | NoFiles
   deriving (Read, Show)
@@ -44,6 +48,10 @@ main = C.newPool >>= serve
 
 serve :: C.FilePool -> IO ()
 serve pool = scotty 3000 $ do
+  get "/static/styles.css" $
+    setHeader "Content-Type" "text/css"
+      >> raw (BL.fromStrict styleSheet)
+
   get "/" $ idx >>= renderPage . buildIndex Nothing
 
   get "/uploaded/status/:status" $ do
@@ -84,10 +92,12 @@ renderPage :: H.Html -> ActionM ()
 renderPage = html . renderHtml
 
 layout :: T.Text -> H.Html -> H.Html
-layout title inner = H.docTypeHtml $
+layout title inner = H.docTypeHtml $ do
   H.head $ do
+    H.link H.! A.href "/static/styles.css" H.! A.rel "stylesheet"
     H.title $ H.toHtml title
-    H.body inner
+
+  H.body $ H.main inner
 
 -- Build the markup for the index page. This contains a form to upload files and a view of available
 -- files to download.

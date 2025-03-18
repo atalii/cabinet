@@ -40,6 +40,7 @@ executable cabinet-srv
       blaze-markup ^>= 0.8.3,
       wai-extra ^>= 3.1.14,
       http-types ^>= 0.12.4,
+      file-embed ^>= 0.0.16,
       cabinet
 
     hs-source-dirs:   app
