@@ -56,29 +56,29 @@ serve pool = scotty 3000 $ do
 
   get "/uploaded/status/:status" $ do
     i <- idx
-    pathParam "status" >>= \case
+    captureParam "status" >>= \case
       UploadOk -> renderPage $ buildIndex (Just "Upload completed successfully.") i
       NoFiles -> renderPage $ buildIndex (Just "No files were uploaded.") i
       UploadEmpty -> renderPage $ buildIndex (Just "Can't upload an empty file.") i
 
   get "/files/by-uuid/:uuid" $
-    pathParam "uuid"
-      >>= liftIO . C.poolLookup pool . unwrapUUID
+    captureParam "uuid"
+      >>= liftAndCatchIO . C.poolLookup pool . unwrapUUID
       >>= \case
         Just (C.IndexEntry _ content_type _ _, content) ->
           setHeader "Content-Type" (L.fromStrict $ E.decodeUtf8 content_type)
             >> raw (BL.fromStrict content)
         Nothing -> status notFound404
 
-  post "/files/upload" $ files >>= upload >>= redirect . L.append "/uploaded/status/" . L.show
+  post "/files/upload" $ files >>= upload >>= redirect . L.append "/uploaded/status/" . L.pack . show
   where
     upload [] = return NoFiles
     upload fs = mapM_ uploadSingle fs >> return UploadOk
 
-    idx = liftIO $ C.poolIndex pool
+    idx = liftAndCatchIO $ C.poolIndex pool
 
-    uploadSingle (_, f) | BL.null (fileContent f) = redirect $ L.append "/uploaded/status/" $ L.show UploadEmpty
-    uploadSingle (_, f) = liftIO $ void $ scottyFileToCabinetFile f >>= C.addToPool pool
+    uploadSingle (_, f) | BL.null (fileContent f) = redirect $ L.append "/uploaded/status/" $ L.pack $ show UploadEmpty
+    uploadSingle (_, f) = liftAndCatchIO $ void $ scottyFileToCabinetFile f >>= C.addToPool pool
 
     scottyFileToCabinetFile :: FileInfo BL.ByteString -> IO C.FileBuf
     scottyFileToCabinetFile f =
