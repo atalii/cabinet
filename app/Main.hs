@@ -10,21 +10,24 @@ module Main where
 -- + deploy (wednesday)
 
 import Control.Monad (void)
+import System.Environment (lookupEnv)
+import Data.FileEmbed (embedFileRelative)
+import Data.Maybe (fromMaybe)
+import Network.HTTP.Types.Status
+import Network.Wai.Parse
+import Text.Blaze.Html.Renderer.Text (renderHtml)
+import Text.Read (readMaybe)
+import Web.Scotty
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Cabinet as C
-import Data.FileEmbed (embedFileRelative)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as E
 import qualified Data.Text.Lazy as L
 import qualified Data.UUID as UUID
-import Network.HTTP.Types.Status
-import Network.Wai.Parse
 import qualified Text.Blaze as Blaze
-import Text.Blaze.Html.Renderer.Text (renderHtml)
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
-import Web.Scotty
 
 styleSheet :: B.ByteString
 styleSheet = $(embedFileRelative "static/styles.css")
@@ -46,8 +49,11 @@ instance Parsable UUID where
 main :: IO ()
 main = C.newPool >>= serve
 
+getPort :: IO Int
+getPort = fmap (fromMaybe 3000 . (>>= readMaybe)) (lookupEnv "CABINET_PORT")
+
 serve :: C.FilePool -> IO ()
-serve pool = scotty 3000 $ do
+serve pool = getPort >>= \port -> scotty port $ do
   get "/static/styles.css" $
     setHeader "Content-Type" "text/css"
       >> raw (BL.fromStrict styleSheet)

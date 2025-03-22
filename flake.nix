@@ -16,6 +16,9 @@
           serviceConfig = {
             ExecStart = "${self.packages.x86_64-linux.default}/bin/cabinet-srv";
           };
+
+          # Picked randomly. Lol.
+	  environment.CABINET_PORT = "6445";
         };
       };
   };
