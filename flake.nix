@@ -14,7 +14,7 @@
           after = [ "network.target" ];
           description = "file storage web server";
           serviceConfig = {
-            ExecStart = "${self.packages.x86_64-linux.default}/bin/cabinet";
+            ExecStart = "${self.packages.x86_64-linux.default}/bin/cabinet-srv";
           };
         };
       };
