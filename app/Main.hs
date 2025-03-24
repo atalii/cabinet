@@ -28,6 +28,7 @@ import qualified Data.UUID as UUID
 import qualified Text.Blaze as Blaze
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
+import Network.HTTP.Base (urlEncode)
 
 styleSheet :: B.ByteString
 styleSheet = $(embedFileRelative "static/styles.css")
@@ -67,8 +68,13 @@ serve pool = getPort >>= \port -> scotty port $ do
       NoFiles -> renderPage $ buildIndex (Just "No files were uploaded.") i
       UploadEmpty -> renderPage $ buildIndex (Just "Can't upload an empty file.") i
 
-  get "/files/by-uuid/:uuid" $
-    captureParam "uuid"
+  get "/files/by-uuid/:uuid" getByUUID
+  get "/files/by-uuid/:uuid/:fname" getByUUID
+
+  post "/files/upload" $ files >>= upload >>= redirect . L.append "/uploaded/status/" . L.pack . show
+  where
+    getByUUID :: ActionM ()
+    getByUUID = captureParam "uuid"
       >>= liftAndCatchIO . C.poolLookup pool . unwrapUUID
       >>= \case
         Just (C.IndexEntry _ content_type _ _, content) ->
@@ -76,8 +82,6 @@ serve pool = getPort >>= \port -> scotty port $ do
             >> raw (BL.fromStrict content)
         Nothing -> status notFound404
 
-  post "/files/upload" $ files >>= upload >>= redirect . L.append "/uploaded/status/" . L.pack . show
-  where
     upload [] = return NoFiles
     upload fs = mapM_ uploadSingle fs >> return UploadOk
 
@@ -127,5 +131,5 @@ buildIndex uploadStatus idx = layout "Cabinet" $ statusView uploadStatus >> uplo
     entryView :: C.IndexEntry -> H.Html
     entryView (C.IndexEntry title _ uuid _) =
       H.li $
-        H.a H.! A.href (Blaze.stringValue $ "/files/by-uuid/" ++ show uuid) $
+        H.a H.! A.href (Blaze.stringValue $ "/files/by-uuid/" ++ show uuid ++ "/" ++ (urlEncode . T.unpack) title) $
           H.toHtml title

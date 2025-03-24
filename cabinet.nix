@@ -1,5 +1,5 @@
 { mkDerivation, base, blaze-html, blaze-markup, bytestring
-, containers, file-embed, http-types, HUnit, lib, scotty, stm, text
+, containers, file-embed, HTTP, http-types, HUnit, lib, scotty, stm, text
 , time, uuid, wai-extra
 }:
 mkDerivation {
@@ -12,7 +12,7 @@ mkDerivation {
     base bytestring containers stm text time uuid
   ];
   executableHaskellDepends = [
-    base blaze-html blaze-markup bytestring file-embed http-types
+    base blaze-html blaze-markup bytestring file-embed HTTP http-types
     scotty stm text uuid wai-extra
   ];
   testHaskellDepends = [ base bytestring HUnit ];
