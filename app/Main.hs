@@ -125,7 +125,7 @@ buildIndex uploadStatus idx = layout "Cabinet" $ statusView uploadStatus >> uplo
       H.form H.! A.action "/files/upload" H.! A.method "post" H.! A.enctype "multipart/form-data" $
         fileUpload >> submit
 
-    indexView = H.ul $ mapM_ entryView sortedIdx
+    indexView = H.div $ mapM_ entryView sortedIdx
 
     sortedIdx = sortOn (Down . C.idxTime) idx
 
@@ -133,7 +133,7 @@ buildIndex uploadStatus idx = layout "Cabinet" $ statusView uploadStatus >> uplo
     submit = H.input H.! A.type_ "submit" H.! A.value "Upload documents."
 
     entryView :: C.IndexEntry -> H.Html
-    entryView (C.IndexEntry title _ uuid _) =
-      H.li $
-        H.a H.! A.href (Blaze.stringValue $ "/files/by-uuid/" ++ show uuid ++ "/" ++ (urlEncode . T.unpack) title) $
-          H.toHtml title
+    entryView (C.IndexEntry title _ uuid time) =
+        H.a H.! A.href (Blaze.stringValue $ "/files/by-uuid/" ++ show uuid ++ "/" ++ (urlEncode . T.unpack) title) $ do
+            H.div H.! A.class_ "left" $ H.toHtml title
+            H.div H.! A.class_ "right" $ H.toHtml $ show time
