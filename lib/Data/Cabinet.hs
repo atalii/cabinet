@@ -8,6 +8,7 @@ module Data.Cabinet
     poolLookup,
     poolIndex,
     IndexEntry (..),
+    idxTime,
     FilePool,
     FileBuf,
   )
@@ -58,6 +59,9 @@ type Index = [IndexEntry]
 -- An IndexEntry stores, in order, the name, the content-type, a UUID, and the
 -- time of creation.
 data IndexEntry = IndexEntry T.Text B.ByteString UUID.UUID UTCTime
+
+idxTime :: IndexEntry -> UTCTime
+idxTime (IndexEntry _ _ _ time) = time
 
 newPool :: IO FilePool
 newPool =

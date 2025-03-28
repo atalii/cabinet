@@ -18,6 +18,8 @@ import Network.Wai.Parse
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Read (readMaybe)
 import Web.Scotty
+import Data.List
+import Data.Ord
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Cabinet as C
@@ -123,7 +125,9 @@ buildIndex uploadStatus idx = layout "Cabinet" $ statusView uploadStatus >> uplo
       H.form H.! A.action "/files/upload" H.! A.method "post" H.! A.enctype "multipart/form-data" $
         fileUpload >> submit
 
-    indexView = H.ul $ mapM_ entryView idx
+    indexView = H.ul $ mapM_ entryView sortedIdx
+
+    sortedIdx = sortOn (Down . C.idxTime) idx
 
     fileUpload = H.input H.! A.type_ "file" H.! A.multiple mempty H.! A.name "files" H.! A.required ""
     submit = H.input H.! A.type_ "submit" H.! A.value "Upload documents."
