@@ -77,7 +77,7 @@ serve pool = getPort >>= \port -> scotty port $ do
   where
     getByUUID :: ActionM ()
     getByUUID = captureParam "uuid"
-      >>= liftAndCatchIO . C.poolLookup pool . unwrapUUID
+      >>= liftIO . C.poolLookup pool . unwrapUUID
       >>= \case
         Just (C.IndexEntry _ content_type _ _, content) ->
           setHeader "Content-Type" (L.fromStrict $ E.decodeUtf8 content_type)
@@ -87,10 +87,10 @@ serve pool = getPort >>= \port -> scotty port $ do
     upload [] = return NoFiles
     upload fs = mapM_ uploadSingle fs >> return UploadOk
 
-    idx = liftAndCatchIO $ C.poolIndex pool
+    idx = liftIO $ C.poolIndex pool
 
     uploadSingle (_, f) | BL.null (fileContent f) = redirect $ L.append "/uploaded/status/" $ L.pack $ show UploadEmpty
-    uploadSingle (_, f) = liftAndCatchIO $ void $ scottyFileToCabinetFile f >>= C.addToPool pool
+    uploadSingle (_, f) = liftIO $ void $ scottyFileToCabinetFile f >>= C.addToPool pool
 
     scottyFileToCabinetFile :: FileInfo BL.ByteString -> IO C.FileBuf
     scottyFileToCabinetFile f =
