@@ -110,6 +110,8 @@ layout :: T.Text -> H.Html -> H.Html
 layout title inner = H.docTypeHtml $ do
   H.head $ do
     H.link H.! A.href "/static/styles.css" H.! A.rel "stylesheet"
+    -- <meta name="viewport" content="width=device-width, initial-scale=1" />
+    H.meta H.! A.name "viewport" H.! A.content "width=device-width, initial-scale=1"
     H.title $ H.toHtml title
 
   H.body $ H.main inner
