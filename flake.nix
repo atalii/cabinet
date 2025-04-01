@@ -6,6 +6,10 @@
       let pkgs = nixpkgs.legacyPackages.x86_64-linux;
       in import ./default.nix { inherit pkgs; };
 
+    devShells.x86_64-linux.default =
+      let pkgs = nixpkgs.legacyPackages.x86_64-linux;
+      in import ./shell.nix { inherit pkgs; };
+
     nixosModules.cabinet =
       { config, ... }: {
         networking.firewall.allowedTCPPorts = [ 80 ];
