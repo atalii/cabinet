@@ -11,7 +11,6 @@ module Main where
 
 import Control.Monad (void)
 import System.Environment (lookupEnv)
-import Data.FileEmbed (embedFileRelative)
 import Data.Maybe (fromMaybe)
 import Network.HTTP.Types.Status
 import Network.Wai.Parse
@@ -21,6 +20,7 @@ import Web.Scotty
 import Data.List
 import Data.Ord
 import qualified Data.ByteString as B
+import qualified Data.ByteString.UTF8 as BU
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Cabinet as C
 import qualified Data.Text as T
@@ -31,9 +31,11 @@ import qualified Text.Blaze as Blaze
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
 import Network.HTTP.Base (urlEncode)
+import Paths_cabinet
 
-styleSheet :: B.ByteString
-styleSheet = $(embedFileRelative "static/styles.css")
+styleSheet :: IO B.ByteString
+styleSheet = fmap BU.fromString d
+  where d = getDataFileName "static/styles.css" >>= readFile
 
 data UploadResult = UploadOk | UploadEmpty | NoFiles
   deriving (Read, Show)
@@ -57,9 +59,10 @@ getPort = fmap (fromMaybe 3000 . (>>= readMaybe)) (lookupEnv "CABINET_PORT")
 
 serve :: C.FilePool -> IO ()
 serve pool = getPort >>= \port -> scotty port $ do
-  get "/static/styles.css" $
+  get "/static/styles.css" $ do
+    styles <- liftAndCatchIO styleSheet
     setHeader "Content-Type" "text/css"
-      >> raw (BL.fromStrict styleSheet)
+      >> raw (BL.fromStrict styles)
 
   get "/" $ idx >>= renderPage . buildIndex Nothing
 
