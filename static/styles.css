@@ -49,6 +49,18 @@ a:hover {
 	background-color: var(--bg-accent);
 }
 
+@media (max-width: 1280px) {
+	a {
+		display: flex;
+		padding-bottom: 1em;
+	}
+
+	a > div {
+		float: none;
+		width: 100%;
+	}
+}
+
 a > div.left {
 	float: left;
 }
