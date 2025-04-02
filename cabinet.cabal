@@ -42,7 +42,6 @@ executable cabinet-srv
       wai-extra ^>= 3.1.14,
       http-types ^>= 0.12.4,
       HTTP ^>= 4000.4,
-      utf8-string ^>= 1.0.0,
       cabinet
 
     hs-source-dirs:   app

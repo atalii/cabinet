@@ -1,11 +1,11 @@
 module Resources (loadResource) where
 
 import qualified Data.ByteString as B
-import qualified Data.ByteString.UTF8 as BU
+import System.IO (withFile, IOMode (..))
 import Paths_cabinet
 
 loadResource :: String -> IO B.ByteString
-loadResource path = fmap BU.fromString d
+loadResource path = path' >>= slurp
   where
-    d = getDataFileName path' >>= readFile
-    path' = "static/" ++ path
+    path' = getDataFileName $ "static/" ++ path
+    slurp p = withFile p ReadMode B.hGetContents
