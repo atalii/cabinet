@@ -29,7 +29,7 @@ library
 executable cabinet-srv
     import:           warnings
     main-is:          Main.hs
-    other-modules:    Paths_cabinet
+    other-modules:    Paths_cabinet, Resources
     build-depends:
       base ^>= 4.18,
       bytestring >= 0.10,

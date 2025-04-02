@@ -15,7 +15,6 @@ import Web.Scotty
 import Data.List
 import Data.Ord
 import qualified Data.ByteString as B
-import qualified Data.ByteString.UTF8 as BU
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Cabinet as C
 import qualified Data.Text as T
@@ -26,11 +25,10 @@ import qualified Text.Blaze as Blaze
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
 import Network.HTTP.Base (urlEncode)
-import Paths_cabinet
+import Resources (loadResource)
 
 styleSheet :: IO B.ByteString
-styleSheet = fmap BU.fromString d
-  where d = getDataFileName "static/styles.css" >>= readFile
+styleSheet = loadResource "styles.css"
 
 data UploadResult = UploadOk | UploadEmpty | NoFiles
   deriving (Read, Show)
