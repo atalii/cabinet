@@ -4,11 +4,6 @@
 
 module Main where
 
--- TODO:
--- + basic stylesheet via static server middleware (tomorrow)
--- + refactoring, general cleaning of web stuff (tomorrow)
--- + deploy (wednesday)
-
 import Control.Monad (void)
 import System.Environment (lookupEnv)
 import Data.Maybe (fromMaybe)
