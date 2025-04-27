@@ -127,19 +127,19 @@ buildIndex uploadStatus idx = layout "Cabinet" $ statusView uploadStatus >> uplo
 
     indexView = H.div $ mapM_ entryView sortedIdx
 
-    sortedIdx = sortOn (Down . C.idxTime) idx
+    sortedIdx = sortOn (Down . C.i_creation) idx
 
     fileUpload = H.input H.! A.type_ "file" H.! A.multiple mempty H.! A.name "files" H.! A.required ""
     submit = H.input H.! A.type_ "submit" H.! A.value "Upload documents."
 
     entryView :: C.IndexEntry -> H.Html
-    entryView (C.IndexEntry title _ uuid time) = H.details $ do
+    entryView ie = H.details $ do
      H.summary $ do
-        H.a H.! A.href (Blaze.stringValue $ "/files/by-uuid/" ++ show uuid ++ "/" ++ (urlEncode . T.unpack) title) $ do
-            H.div H.! A.class_ "left" $ H.toHtml title
-            H.div H.! A.class_ "right" $ H.toHtml $ show time
+        H.a H.! A.href (Blaze.stringValue $ "/files/by-uuid/" ++ show (C.i_id ie) ++ "/" ++ (urlEncode . T.unpack) (C.i_name ie)) $ do
+            H.div H.! A.class_ "left" $ H.toHtml $ C.i_name ie
+            H.div H.! A.class_ "right" $ H.toHtml $ show $ C.i_creation ie
 
-     H.form H.! A.action (Blaze.stringValue $ "/set-attrs/by-uuid/" ++ show uuid) H.! A.method "post" H.! A.enctype "multipart/form-data" $ do
+     H.form H.! A.action (Blaze.stringValue $ "/set-attrs/by-uuid/" ++ show (C.i_id ie)) H.! A.method "post" H.! A.enctype "multipart/form-data" $ do
        H.label H.! A.for "public" $ "public"
        H.input H.! A.type_ "checkbox" H.! A.name "public (TODO)"
        H.label H.! A.for "sticky" $ "sticky"
