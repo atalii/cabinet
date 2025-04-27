@@ -29,6 +29,7 @@ data FileBuf = FileBuf
     -- presumably in case the uploaded data doesn't parse well as any usual encoding.
     f_content_type :: B.ByteString,
     f_sticky :: Bool,
+    f_public :: Bool,
     f_created_at :: UTCTime,
     f_data :: B.ByteString
   }
@@ -87,6 +88,7 @@ buildFile f_name f_content_type f_sticky f_data =
         { f_name,
           f_content_type,
           f_sticky,
+          f_public = False,
           f_created_at,
           f_data
         }
