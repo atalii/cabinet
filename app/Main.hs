@@ -69,6 +69,8 @@ serve pool = getPort >>= \port -> scotty port $ do
   get "/files/by-uuid/:uuid" getByUUID
   get "/files/by-uuid/:uuid/:fname" getByUUID
 
+  post "/set-attrs/by-uuid/:uuid" $ redirect "/"
+
   post "/files/upload" $ files >>= upload >>= redirect . L.append "/uploaded/status/" . L.pack . show
   where
     getByUUID :: ActionM ()
@@ -131,7 +133,15 @@ buildIndex uploadStatus idx = layout "Cabinet" $ statusView uploadStatus >> uplo
     submit = H.input H.! A.type_ "submit" H.! A.value "Upload documents."
 
     entryView :: C.IndexEntry -> H.Html
-    entryView (C.IndexEntry title _ uuid time) =
+    entryView (C.IndexEntry title _ uuid time) = H.details $ do
+     H.summary $ do
         H.a H.! A.href (Blaze.stringValue $ "/files/by-uuid/" ++ show uuid ++ "/" ++ (urlEncode . T.unpack) title) $ do
             H.div H.! A.class_ "left" $ H.toHtml title
             H.div H.! A.class_ "right" $ H.toHtml $ show time
+
+     H.form H.! A.action (Blaze.stringValue $ "/set-attrs/by-uuid/" ++ show uuid) H.! A.method "post" H.! A.enctype "multipart/form-data" $ do
+       H.label H.! A.for "public" $ "public"
+       H.input H.! A.type_ "checkbox" H.! A.name "public (TODO)"
+       H.label H.! A.for "sticky" $ "sticky"
+       H.input H.! A.type_ "checkbox" H.! A.name "sticky (TODO)"
+       H.input H.! A.type_ "submit" H.! A.value "Set attributes."

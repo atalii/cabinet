@@ -20,7 +20,7 @@ main > * {
 	margin-top: 0.1in;
 }
 
-form {
+main > form {
 	width: 100%;
 	background-color: var(--bg-accent);
 }
@@ -37,7 +37,7 @@ ul {
 	width: 100%;
 }
 
-a {
+details, details > summary > a {
 	text-decoration: none;
 	color: inherit;
 
@@ -45,7 +45,7 @@ a {
 	width: 100%;
 }
 
-a:hover {
+summary:hover {
 	background-color: var(--bg-accent);
 }
 
