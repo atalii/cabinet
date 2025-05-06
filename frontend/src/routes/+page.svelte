@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { PageProps } from './$types';
+
 	import Dropzone from 'svelte-file-dropzone';
 
 	interface Files {
@@ -15,11 +17,14 @@
 		files.accepted = [...files.accepted, ...acceptedFiles];
 		files.rejected = [...files.rejected, ...fileRejections];
 	}
+
+	let { data }: PageProps = $props();
+	let statusClass = data.success ? 'status-success' : 'status-failure';
 </script>
 
-<form action="/files/upload" method="post" enctype="multipart/form-data">
+<form action="/api/files/upload" method="post" enctype="multipart/form-data">
 	<div class="file-menu">
-		<Dropzone containerClasses="file-input" on:drop={handleFilesSelect}>
+		<Dropzone containerClasses="file-input" on:drop={handleFilesSelect} name="files">
 			<span class="form-copy">Select files.</span>
 		</Dropzone>
 
@@ -36,9 +41,35 @@
 			<li>{file.path}</li>
 		{/each}
 	</ul>
+	<div class="status-message {statusClass}">
+		{#if data.message}
+			<p>{data.message}</p>
+		{/if}
+	</div>
 </form>
 
 <style>
+	div.status-message {
+		display: none;
+
+		border: 1px solid #5b5bbb !important;
+		border-radius: 0.25rem !important;
+		padding-left: 1rem;
+		padding-right: 1rem;
+	}
+
+	div.status-success {
+		background-color: #eaffe4;
+	}
+
+	div.status-failure {
+		background-color: #f2cccc;
+	}
+
+	div.status-message:has(p) {
+		display: block;
+	}
+
 	.file-menu {
 		display: flex;
 		flex-direction: row;
@@ -46,7 +77,7 @@
 	}
 
 	.submit {
-		border: 2px solid #ccc;
+		border: 1px solid #5b5bbb;
 		border-radius: 0.25rem;
 		background-color: #eaffe4;
 		padding-left: 1rem;
@@ -61,7 +92,7 @@
 
 	:global {
 		.file-input {
-			border: 2px solid #ccc !important;
+			border: 1px solid #5b5bbb !important;
 			border-radius: 0.25rem !important;
 			background-color: #f2f2f2 !important;
 			align-items: start !important;
@@ -72,12 +103,14 @@
 			cursor: pointer;
 		}
 
+		/* Using :has makes sure that we don't erroneously style empty
+		 * .files. */
 		.files:has(li) {
 			max-width: 100%;
 			padding: 1rem;
 			margin-top: 1rem;
 			background-color: #f9f9f9;
-			border: 2px solid #ddd;
+			border: 1px solid #5b5b5b;
 			border-radius: 0.25rem;
 
 			display: flex;

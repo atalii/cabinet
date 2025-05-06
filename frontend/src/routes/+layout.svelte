@@ -1,3 +1,7 @@
+<script>
+	import '@fontsource/source-sans-pro';
+</script>
+
 <main>
 	<slot />
 </main>
@@ -6,6 +10,6 @@
 	main {
 		max-width: 8.5in;
 		margin: auto;
-		font-family: 'Sans Serif';
+		font-family: 'Source Sans Pro', sans-serif;
 	}
 </style>

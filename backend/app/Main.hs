@@ -4,27 +4,27 @@
 module Main where
 
 import Control.Monad (void)
-import System.Environment (lookupEnv)
-import Data.Maybe (fromMaybe)
-import Network.HTTP.Types.Status
-import Network.Wai.Parse
-import Text.Blaze.Html.Renderer.Text (renderHtml)
-import Text.Read (readMaybe)
-import Web.Scotty
-import Data.List
-import Data.Ord
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Cabinet as C
+import Data.List
+import Data.Maybe (fromMaybe)
+import Data.Ord
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as E
 import qualified Data.Text.Lazy as L
 import qualified Data.UUID as UUID
+import Network.HTTP.Base (urlEncode)
+import Network.HTTP.Types.Status
+import Network.Wai.Parse
+import Resources (loadResource)
+import System.Environment (lookupEnv)
 import qualified Text.Blaze as Blaze
+import Text.Blaze.Html.Renderer.Text (renderHtml)
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
-import Network.HTTP.Base (urlEncode)
-import Resources (loadResource)
+import Text.Read (readMaybe)
+import Web.Scotty
 
 styleSheet :: IO B.ByteString
 styleSheet = loadResource "styles.css"
@@ -50,31 +50,25 @@ getPort :: IO Int
 getPort = fmap (fromMaybe 3000 . (>>= readMaybe)) (lookupEnv "CABINET_PORT")
 
 serve :: C.FilePool -> IO ()
-serve pool = getPort >>= \port -> scotty port $ do
-  get "/static/styles.css" $ do
-    styles <- liftAndCatchIO styleSheet
-    setHeader "Content-Type" "text/css"
-      >> raw (BL.fromStrict styles)
+serve pool =
+  getPort >>= \port -> scotty port $ do
+    get "/static/styles.css" $ do
+      styles <- liftAndCatchIO styleSheet
+      setHeader "Content-Type" "text/css"
+        >> raw (BL.fromStrict styles)
 
-  get "/" $ idx >>= renderPage . buildIndex Nothing
+    get "/" $ idx >>= renderPage . buildIndex Nothing
 
-  get "/uploaded/status/:status" $ do
-    i <- idx
-    captureParam "status" >>= \case
-      UploadOk -> renderPage $ buildIndex (Just "Upload completed successfully.") i
-      NoFiles -> renderPage $ buildIndex (Just "No files were uploaded.") i
-      UploadEmpty -> renderPage $ buildIndex (Just "Can't upload an empty file.") i
+    get "/files/by-uuid/:uuid" getByUUID
+    get "/files/by-uuid/:uuid/:fname" getByUUID
 
-  get "/files/by-uuid/:uuid" getByUUID
-  get "/files/by-uuid/:uuid/:fname" getByUUID
+    post "/set-attrs/by-uuid/:uuid" $ do
+      public <- formCheckBoxValue "public"
+      uuid <- captureParam "uuid"
+      liftAndCatchIO $ C.setPublic pool (unwrapUUID uuid) public
+      redirect "/"
 
-  post "/set-attrs/by-uuid/:uuid" $ do
-    public <- formCheckBoxValue "public"
-    uuid <- captureParam "uuid"
-    liftAndCatchIO $ C.setPublic pool (unwrapUUID uuid) public
-    redirect "/"
-
-  post "/files/upload" $ files >>= upload >>= redirect . L.append "/uploaded/status/" . L.pack . show
+    post "/files/upload" $ files >>= upload >>= redirect . L.append "/?status=" . L.pack . show
   where
     formCheckBoxValue :: L.Text -> ActionM Bool
     formCheckBoxValue name = formParseCheckBox <$> formParamMaybe name
@@ -84,20 +78,21 @@ serve pool = getPort >>= \port -> scotty port $ do
     formParseCheckBox _ = False
 
     getByUUID :: ActionM ()
-    getByUUID = captureParam "uuid"
-      >>= liftAndCatchIO . C.poolLookup pool . unwrapUUID
-      >>= \case
-        Just (C.IndexEntry _ content_type _ _, content) ->
-          setHeader "Content-Type" (L.fromStrict $ E.decodeUtf8 content_type)
-            >> raw (BL.fromStrict content)
-        Nothing -> status notFound404
+    getByUUID =
+      captureParam "uuid"
+        >>= liftAndCatchIO . C.poolLookup pool . unwrapUUID
+        >>= \case
+          Just (C.IndexEntry _ content_type _ _, content) ->
+            setHeader "Content-Type" (L.fromStrict $ E.decodeUtf8 content_type)
+              >> raw (BL.fromStrict content)
+          Nothing -> status notFound404
 
     upload [] = return NoFiles
     upload fs = mapM_ uploadSingle fs >> return UploadOk
 
     idx = liftAndCatchIO $ C.poolIndex pool
 
-    uploadSingle (_, f) | BL.null (fileContent f) = redirect $ L.append "/uploaded/status/" $ L.pack $ show UploadEmpty
+    uploadSingle (_, f) | BL.null (fileContent f) = redirect $ L.append "/?status=" $ L.pack $ show UploadEmpty
     uploadSingle (_, f) = liftAndCatchIO $ void $ scottyFileToCabinetFile f >>= C.addToPool pool
 
     scottyFileToCabinetFile :: FileInfo BL.ByteString -> IO C.FileBuf
@@ -144,14 +139,14 @@ buildIndex uploadStatus idx = layout "Cabinet" $ statusView uploadStatus >> uplo
 
     entryView :: C.IndexEntry -> H.Html
     entryView ie = H.details $ do
-     H.summary $ do
+      H.summary $ do
         H.a H.! A.href (Blaze.stringValue $ "/files/by-uuid/" ++ show (C.i_id ie) ++ "/" ++ (urlEncode . T.unpack) (C.i_name ie)) $ do
-            H.div H.! A.class_ "left" $ H.toHtml $ C.i_name ie
-            H.div H.! A.class_ "right" $ H.toHtml $ show $ C.i_creation ie
+          H.div H.! A.class_ "left" $ H.toHtml $ C.i_name ie
+          H.div H.! A.class_ "right" $ H.toHtml $ show $ C.i_creation ie
 
-     H.form H.! A.action (Blaze.stringValue $ "/set-attrs/by-uuid/" ++ show (C.i_id ie)) H.! A.method "post" H.! A.enctype "multipart/form-data" $ do
-       H.label H.! A.for "public" $ "public (TODO)"
-       H.input H.! A.type_ "checkbox" H.! A.name "public"
-       H.label H.! A.for "sticky" $ "sticky (TODO)"
-       H.input H.! A.type_ "checkbox" H.! A.name "public"
-       H.input H.! A.type_ "submit" H.! A.value "Set attributes."
+      H.form H.! A.action (Blaze.stringValue $ "/set-attrs/by-uuid/" ++ show (C.i_id ie)) H.! A.method "post" H.! A.enctype "multipart/form-data" $ do
+        H.label H.! A.for "public" $ "public (TODO)"
+        H.input H.! A.type_ "checkbox" H.! A.name "public"
+        H.label H.! A.for "sticky" $ "sticky (TODO)"
+        H.input H.! A.type_ "checkbox" H.! A.name "public"
+        H.input H.! A.type_ "submit" H.! A.value "Set attributes."
