@@ -68,10 +68,21 @@ serve pool = getPort >>= \port -> scotty port $ do
   get "/files/by-uuid/:uuid" getByUUID
   get "/files/by-uuid/:uuid/:fname" getByUUID
 
-  post "/set-attrs/by-uuid/:uuid" $ redirect "/"
+  post "/set-attrs/by-uuid/:uuid" $ do
+    public <- formCheckBoxValue "public"
+    uuid <- captureParam "uuid"
+    liftAndCatchIO $ C.setPublic pool (unwrapUUID uuid) public
+    redirect "/"
 
   post "/files/upload" $ files >>= upload >>= redirect . L.append "/uploaded/status/" . L.pack . show
   where
+    formCheckBoxValue :: L.Text -> ActionM Bool
+    formCheckBoxValue name = formParseCheckBox <$> formParamMaybe name
+
+    formParseCheckBox :: Maybe L.Text -> Bool
+    formParseCheckBox (Just "on") = True
+    formParseCheckBox _ = False
+
     getByUUID :: ActionM ()
     getByUUID = captureParam "uuid"
       >>= liftAndCatchIO . C.poolLookup pool . unwrapUUID
@@ -139,8 +150,8 @@ buildIndex uploadStatus idx = layout "Cabinet" $ statusView uploadStatus >> uplo
             H.div H.! A.class_ "right" $ H.toHtml $ show $ C.i_creation ie
 
      H.form H.! A.action (Blaze.stringValue $ "/set-attrs/by-uuid/" ++ show (C.i_id ie)) H.! A.method "post" H.! A.enctype "multipart/form-data" $ do
-       H.label H.! A.for "public" $ "public"
-       H.input H.! A.type_ "checkbox" H.! A.name "public (TODO)"
-       H.label H.! A.for "sticky" $ "sticky"
-       H.input H.! A.type_ "checkbox" H.! A.name "sticky (TODO)"
+       H.label H.! A.for "public" $ "public (TODO)"
+       H.input H.! A.type_ "checkbox" H.! A.name "public"
+       H.label H.! A.for "sticky" $ "sticky (TODO)"
+       H.input H.! A.type_ "checkbox" H.! A.name "public"
        H.input H.! A.type_ "submit" H.! A.value "Set attributes."

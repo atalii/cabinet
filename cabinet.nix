@@ -5,7 +5,7 @@
 mkDerivation {
   pname = "cabinet";
   version = "0.1.0.0";
-  src = ./.;
+  src = ./backend;
   isLibrary = true;
   isExecutable = true;
   libraryHaskellDepends = [
