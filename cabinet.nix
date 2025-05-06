@@ -1,5 +1,5 @@
 { mkDerivation, base, blaze-html, blaze-markup, bytestring
-, containers, HTTP, http-types, HUnit, lib, scotty, stm, text
+, containers, HTTP, http-types, HUnit, lib, scotty_0_22, stm, text
 , time, uuid, wai-extra
 }:
 mkDerivation {
@@ -13,7 +13,7 @@ mkDerivation {
   ];
   executableHaskellDepends = [
     base blaze-html blaze-markup bytestring HTTP http-types
-    scotty stm text uuid wai-extra
+    scotty_0_22 stm text uuid wai-extra
   ];
   testHaskellDepends = [ base bytestring HUnit ];
   license = lib.licenses.mpl20;
