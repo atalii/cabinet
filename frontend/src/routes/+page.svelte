@@ -14,8 +14,8 @@
 
 	function handleFilesSelect(e) {
 		const { acceptedFiles, fileRejections } = e.detail;
-		files.accepted = [...files.accepted, ...acceptedFiles];
-		files.rejected = [...files.rejected, ...fileRejections];
+		files.accepted = acceptedFiles;
+		files.rejected = fileRejections;
 	}
 
 	let { data }: PageProps = $props();
