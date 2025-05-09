@@ -99,24 +99,26 @@ setPublic :: FilePool -> UUID.UUID -> Bool -> IO ()
 setPublic fp target val = atomically $ modifyTVar fp runSetPublic
   where
     runSetPublic :: FilePool' -> FilePool'
-    runSetPublic fp' = FilePool'
-      { p_by_uuid = M.adjust setPublic' target (p_by_uuid fp'),
-        p_by_date = p_by_date fp',
-        p_in_use = p_in_use fp',
-        p_in_use_at_last_gc = p_in_use_at_last_gc fp',
-        p_gc_interval = p_gc_interval fp',
-        p_gc_prop = p_gc_prop fp'
-      }
+    runSetPublic fp' =
+      FilePool'
+        { p_by_uuid = M.adjust setPublic' target (p_by_uuid fp'),
+          p_by_date = p_by_date fp',
+          p_in_use = p_in_use fp',
+          p_in_use_at_last_gc = p_in_use_at_last_gc fp',
+          p_gc_interval = p_gc_interval fp',
+          p_gc_prop = p_gc_prop fp'
+        }
 
     setPublic' :: FileBuf -> FileBuf
-    setPublic' fb = FileBuf
-      { f_name = f_name fb,
-        f_content_type = f_content_type fb,
-        f_sticky = f_sticky fb,
-        f_public = val,
-        f_created_at = f_created_at fb,
-        f_data = f_data fb
-      }
+    setPublic' fb =
+      FileBuf
+        { f_name = f_name fb,
+          f_content_type = f_content_type fb,
+          f_sticky = f_sticky fb,
+          f_public = val,
+          f_created_at = f_created_at fb,
+          f_data = f_data fb
+        }
 
 -- Add a FileStore object to a pool and return a unique identifier.
 addToPool :: FilePool -> FileBuf -> IO UUID.UUID

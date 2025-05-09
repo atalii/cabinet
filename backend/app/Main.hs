@@ -4,25 +4,21 @@
 module Main where
 
 import Control.Monad (void)
+import Data.Aeson ((.=))
+import qualified Data.Aeson as A
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Cabinet as C
 import Data.List
 import Data.Maybe (fromMaybe)
 import Data.Ord
-import qualified Data.Text as T
 import qualified Data.Text.Encoding as E
 import qualified Data.Text.Lazy as L
 import qualified Data.UUID as UUID
-import Network.HTTP.Base (urlEncode)
 import Network.HTTP.Types.Status
 import Network.Wai.Parse
 import Resources (loadResource)
 import System.Environment (lookupEnv)
-import qualified Text.Blaze as Blaze
-import Text.Blaze.Html.Renderer.Text (renderHtml)
-import qualified Text.Blaze.Html5 as H
-import qualified Text.Blaze.Html5.Attributes as A
 import Text.Read (readMaybe)
 import Web.Scotty
 
@@ -52,12 +48,7 @@ getPort = fmap (fromMaybe 3000 . (>>= readMaybe)) (lookupEnv "CABINET_PORT")
 serve :: C.FilePool -> IO ()
 serve pool =
   getPort >>= \port -> scotty port $ do
-    get "/static/styles.css" $ do
-      styles <- liftIO styleSheet
-      setHeader "Content-Type" "text/css"
-        >> raw (BL.fromStrict styles)
-
-    get "/" $ idx >>= renderPage . buildIndex Nothing
+    get "/index" $ idx >>= json . buildIndex
 
     get "/files/by-uuid/:uuid" getByUUID
     get "/files/by-uuid/:uuid/:fname" getByUUID
@@ -68,7 +59,12 @@ serve pool =
       liftIO $ C.setPublic pool (unwrapUUID uuid) public
       redirect "/"
 
-    post "/files/upload" $ files >>= upload >>= redirect . L.append "/?status=" . L.pack . show
+    post "/files/upload" $
+      files
+        >>= upload
+        -- This is moderately evil, but we never expect /?status=whatever to be
+        -- handled by this server; instead we're redirecting to the frontend.
+        >>= redirect . L.append "/?status=" . L.pack . show
   where
     formCheckBoxValue :: L.Text -> ActionM Bool
     formCheckBoxValue name = formParseCheckBox <$> formParamMaybe name
@@ -103,50 +99,16 @@ serve pool =
         False
         (B.toStrict $ fileContent f)
 
-renderPage :: H.Html -> ActionM ()
-renderPage = html . renderHtml
-
-layout :: T.Text -> H.Html -> H.Html
-layout title inner = H.docTypeHtml $ do
-  H.head $ do
-    H.link H.! A.href "/static/styles.css" H.! A.rel "stylesheet"
-    -- <meta name="viewport" content="width=device-width, initial-scale=1" />
-    H.meta H.! A.name "viewport" H.! A.content "width=device-width, initial-scale=1"
-    H.title $ H.toHtml title
-
-  H.body $ H.main inner
-
--- Build the markup for the index page. This contains a form to upload files and a view of available
--- files to download.
---
--- TODO: This should also display instance stats about store and GC.
-buildIndex :: Maybe T.Text -> [C.IndexEntry] -> H.Html
-buildIndex uploadStatus idx = layout "Cabinet" $ statusView uploadStatus >> uploadFormView >> indexView
+-- Get a JSON document with an index of available files in the cabinet.
+buildIndex :: [C.IndexEntry] -> A.Value
+buildIndex idx = A.toJSONList $ map entryView sortedIdx
   where
-    statusView Nothing = mempty
-    statusView (Just msg) = H.div H.! A.class_ "status" $ H.toHtml msg
-
-    uploadFormView =
-      H.form H.! A.action "/files/upload" H.! A.method "post" H.! A.enctype "multipart/form-data" $
-        fileUpload >> submit
-
-    indexView = H.div $ mapM_ entryView sortedIdx
-
     sortedIdx = sortOn (Down . C.i_creation) idx
 
-    fileUpload = H.input H.! A.type_ "file" H.! A.multiple mempty H.! A.name "files" H.! A.required ""
-    submit = H.input H.! A.type_ "submit" H.! A.value "Upload documents."
-
-    entryView :: C.IndexEntry -> H.Html
-    entryView ie = H.details $ do
-      H.summary $ do
-        H.a H.! A.href (Blaze.stringValue $ "/files/by-uuid/" ++ show (C.i_id ie) ++ "/" ++ (urlEncode . T.unpack) (C.i_name ie)) $ do
-          H.div H.! A.class_ "left" $ H.toHtml $ C.i_name ie
-          H.div H.! A.class_ "right" $ H.toHtml $ show $ C.i_creation ie
-
-      H.form H.! A.action (Blaze.stringValue $ "/set-attrs/by-uuid/" ++ show (C.i_id ie)) H.! A.method "post" H.! A.enctype "multipart/form-data" $ do
-        H.label H.! A.for "public" $ "public (TODO)"
-        H.input H.! A.type_ "checkbox" H.! A.name "public"
-        H.label H.! A.for "sticky" $ "sticky (TODO)"
-        H.input H.! A.type_ "checkbox" H.! A.name "public"
-        H.input H.! A.type_ "submit" H.! A.value "Set attributes."
+    entryView :: C.IndexEntry -> A.Value
+    entryView ie =
+      A.object
+        [ "name" .= C.i_name ie,
+          "id" .= C.i_id ie,
+          "creation_date" .= C.i_creation ie
+        ]

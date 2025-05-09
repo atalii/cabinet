@@ -46,6 +46,17 @@
 			<p>{data.message}</p>
 		{/if}
 	</div>
+
+	<ul class="file-index">
+		{#each data.index as file}
+			<li>
+				<a href="/api/files/by-uuid/{file.id}/{file.name}" class="file-entry">
+					<span class="left">{file.name}</span>
+					<span class="right">{file.creation_date}</span>
+				</a>
+			</li>
+		{/each}
+	</ul>
 </form>
 
 <style>
@@ -56,6 +67,32 @@
 		border-radius: 0.25rem !important;
 		padding-left: 1rem;
 		padding-right: 1rem;
+	}
+
+	ul.file-index {
+		padding: 0;
+	}
+
+	ul.file-index > li {
+		list-style-type: none;
+	}
+
+	a.file-entry {
+		display: flex;
+		width: 100%;
+		text-decoration: none;
+		justify-content: space-between;
+		color: inherit;
+
+		font-size: 14pt;
+	}
+
+	a.file-entry > .right {
+		color: #5b5bbb;
+	}
+
+	a.file-entry:hover {
+		text-decoration: underline;
 	}
 
 	div.status-success {

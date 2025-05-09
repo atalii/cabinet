@@ -1,6 +1,6 @@
-{ mkDerivation, base, blaze-html, blaze-markup, bytestring
-, containers, HTTP, http-types, HUnit, lib, scotty_0_22, stm, text
-, time, uuid, wai-extra
+{ mkDerivation, aeson, base, bytestring , containers, HTTP
+, http-types, HUnit, lib, scotty_0_22, stm, text, time
+, uuid, wai-extra
 }:
 mkDerivation {
   pname = "cabinet";
@@ -12,7 +12,7 @@ mkDerivation {
     base bytestring containers stm text time uuid
   ];
   executableHaskellDepends = [
-    base blaze-html blaze-markup bytestring HTTP http-types
+    base aeson bytestring HTTP http-types
     scotty_0_22 stm text uuid wai-extra
   ];
   testHaskellDepends = [ base bytestring HUnit ];

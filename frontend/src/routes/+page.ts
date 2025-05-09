@@ -17,11 +17,13 @@ const fromStatus: String = (val) => {
 	}
 }
 
-export const load: PageLoad = async ({ url }) => {
+export const load: PageLoad = async ({ fetch, url }) => {
 	const status = url.searchParams.get("status");
+	const index = await fetch('/api/index');
 
 	return {
 		success: status === "UploadOk",
 		message: fromStatus(status),
+		index: await index.json(),
 	};
 }
