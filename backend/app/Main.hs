@@ -53,7 +53,7 @@ serve :: C.FilePool -> IO ()
 serve pool =
   getPort >>= \port -> scotty port $ do
     get "/static/styles.css" $ do
-      styles <- liftAndCatchIO styleSheet
+      styles <- liftIO styleSheet
       setHeader "Content-Type" "text/css"
         >> raw (BL.fromStrict styles)
 
@@ -65,7 +65,7 @@ serve pool =
     post "/set-attrs/by-uuid/:uuid" $ do
       public <- formCheckBoxValue "public"
       uuid <- captureParam "uuid"
-      liftAndCatchIO $ C.setPublic pool (unwrapUUID uuid) public
+      liftIO $ C.setPublic pool (unwrapUUID uuid) public
       redirect "/"
 
     post "/files/upload" $ files >>= upload >>= redirect . L.append "/?status=" . L.pack . show
@@ -80,7 +80,7 @@ serve pool =
     getByUUID :: ActionM ()
     getByUUID =
       captureParam "uuid"
-        >>= liftAndCatchIO . C.poolLookup pool . unwrapUUID
+        >>= liftIO . C.poolLookup pool . unwrapUUID
         >>= \case
           Just (C.IndexEntry _ content_type _ _, content) ->
             setHeader "Content-Type" (L.fromStrict $ E.decodeUtf8 content_type)
@@ -90,10 +90,10 @@ serve pool =
     upload [] = return NoFiles
     upload fs = mapM_ uploadSingle fs >> return UploadOk
 
-    idx = liftAndCatchIO $ C.poolIndex pool
+    idx = liftIO $ C.poolIndex pool
 
     uploadSingle (_, f) | BL.null (fileContent f) = redirect $ L.append "/?status=" $ L.pack $ show UploadEmpty
-    uploadSingle (_, f) = liftAndCatchIO $ void $ scottyFileToCabinetFile f >>= C.addToPool pool
+    uploadSingle (_, f) = liftIO $ void $ scottyFileToCabinetFile f >>= C.addToPool pool
 
     scottyFileToCabinetFile :: FileInfo BL.ByteString -> IO C.FileBuf
     scottyFileToCabinetFile f =
