@@ -37,6 +37,15 @@
 		color: #5b5bbb;
 	}
 
+	a.file-entry > .left {
+		/* By default, a flex child has a min-width of auto, which
+		 * means that overly long children can break out of the
+		 * container. */
+		min-width: 0;
+		overflow: scroll;
+		scrollbar-width: thin;
+	}
+
 	a.file-entry:hover {
 		text-decoration: underline;
 	}
