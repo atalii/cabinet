@@ -5,10 +5,12 @@ module Data.Cabinet
     buildFile,
     addToPool,
     poolCount,
-    poolLookup,
     poolIndex,
+    poolLookup,
+    poolMetadata,
     setPublic,
     IndexEntry (..),
+    Metadata (..),
     FilePool,
     FileBuf,
   )
@@ -47,10 +49,14 @@ type FilePool = TVar FilePool'
 data FilePool' = FilePool'
   { p_by_uuid :: M.Map UUID.UUID FileBuf,
     p_by_date :: M.Map UTCTime UUID.UUID,
-    p_in_use :: Int,
-    p_in_use_at_last_gc :: Int,
-    p_gc_interval :: Int,
-    p_gc_prop :: Int
+    p_md :: Metadata
+  }
+
+data Metadata = Metadata
+  { m_in_use :: Int,
+    m_in_use_at_last_gc :: Int,
+    m_gc_interval :: Int,
+    m_gc_prop :: Int
   }
 
 -- An index type is a snapshot of a pool at a given time. There's no guarantee
@@ -70,13 +76,16 @@ newPool =
     FilePool'
       { p_by_uuid = M.empty,
         p_by_date = M.empty,
-        p_in_use = 0,
-        p_in_use_at_last_gc = 0,
-        -- By default, remove the oldest 10% at each megabyte. Perhaps this is stupid.
-        --
-        -- TODO: Make this configurable.
-        p_gc_interval = 1024 * 1024,
-        p_gc_prop = 10
+        p_md =
+          Metadata
+            { m_in_use = 0,
+              m_in_use_at_last_gc = 0,
+              -- By default, remove the oldest 10% at each megabyte. Perhaps this is stupid.
+              --
+              -- TODO: Make this configurable.
+              m_gc_interval = 1024 * 1024,
+              m_gc_prop = 10
+            }
       }
 
 -- Create a FileStore object given a name, whether to keep it
@@ -103,10 +112,7 @@ setPublic fp target val = atomically $ modifyTVar fp runSetPublic
       FilePool'
         { p_by_uuid = M.adjust setPublic' target (p_by_uuid fp'),
           p_by_date = p_by_date fp',
-          p_in_use = p_in_use fp',
-          p_in_use_at_last_gc = p_in_use_at_last_gc fp',
-          p_gc_interval = p_gc_interval fp',
-          p_gc_prop = p_gc_prop fp'
+          p_md = p_md fp'
         }
 
     setPublic' :: FileBuf -> FileBuf
@@ -134,7 +140,7 @@ addToPool fp fb =
     runAddition :: UUID.UUID -> FilePool' -> FilePool'
     runAddition uuid old =
       let new = addToPool' uuid old
-       in if p_in_use new - p_in_use old >= p_gc_interval new
+       in if m_in_use (p_md new) - m_in_use (p_md old) >= m_gc_interval (p_md new)
             then runGc new
             else new
 
@@ -142,16 +148,19 @@ addToPool fp fb =
     runGc fp' =
       let by_date = p_by_date fp'
           dates = Map.keys by_date
-          numToClean = length dates * p_gc_prop fp' `div` 100
+          numToClean = length dates * m_gc_prop (p_md fp') `div` 100
           (targets, p_by_date') = deleteOldest numToClean by_date
           (p_by_uuid', saved) = deleteAll targets (p_by_uuid fp')
        in FilePool'
             { p_by_uuid = p_by_uuid',
               p_by_date = p_by_date',
-              p_in_use = p_in_use fp' - saved,
-              p_in_use_at_last_gc = p_in_use fp',
-              p_gc_interval = p_gc_interval fp',
-              p_gc_prop = p_gc_prop fp'
+              p_md =
+                Metadata
+                  { m_in_use = m_in_use (p_md fp') - saved,
+                    m_in_use_at_last_gc = m_in_use (p_md fp'),
+                    m_gc_interval = m_gc_interval (p_md fp'),
+                    m_gc_prop = m_gc_prop (p_md fp')
+                  }
             }
 
     deleteAll :: (Ord k) => [k] -> Map.Map k FileBuf -> (Map.Map k FileBuf, Int)
@@ -174,10 +183,13 @@ addToPool fp fb =
       FilePool'
         { p_by_uuid = Map.insert uuid fb (p_by_uuid fp'),
           p_by_date = Map.insert (f_created_at fb) uuid (p_by_date fp'),
-          p_in_use = p_in_use fp' + B.length (f_data fb),
-          p_in_use_at_last_gc = p_in_use_at_last_gc fp',
-          p_gc_interval = p_gc_interval fp',
-          p_gc_prop = p_gc_prop fp'
+          p_md =
+            Metadata
+              { m_in_use = m_in_use (p_md fp') + B.length (f_data fb),
+                m_in_use_at_last_gc = m_in_use_at_last_gc (p_md fp'),
+                m_gc_interval = m_gc_interval (p_md fp'),
+                m_gc_prop = m_gc_prop (p_md fp')
+              }
         }
 
 poolCount :: FilePool -> IO Int
@@ -190,6 +202,9 @@ poolLookup fp uuid = atomically $ fmap poolLookup' (readTVar fp)
     poolLookup' fp' = do
       file <- M.lookup uuid $ p_by_uuid fp'
       return (toEntry (uuid, file), f_data file)
+
+poolMetadata :: FilePool -> IO Metadata
+poolMetadata fp = atomically $ fmap p_md (readTVar fp)
 
 poolIndex :: FilePool -> IO Index
 poolIndex fp = atomically $ fmap poolIndex' (readTVar fp)

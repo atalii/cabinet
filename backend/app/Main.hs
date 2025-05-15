@@ -49,6 +49,7 @@ serve :: C.FilePool -> IO ()
 serve pool =
   getPort >>= \port -> scotty port $ do
     get "/index" $ idx >>= json . buildIndex
+    get "/metadata" $ poolMetadata >>= json . scrapeMetadata
 
     get "/files/by-uuid/:uuid" getByUUID
     get "/files/by-uuid/:uuid/:fname" getByUUID
@@ -87,6 +88,7 @@ serve pool =
     upload fs = mapM_ uploadSingle fs >> return UploadOk
 
     idx = liftIO $ C.poolIndex pool
+    poolMetadata = liftIO $ C.poolMetadata pool
 
     uploadSingle (_, f) | BL.null (fileContent f) = redirect $ L.append "/?status=" $ L.pack $ show UploadEmpty
     uploadSingle (_, f) = liftIO $ void $ scottyFileToCabinetFile f >>= C.addToPool pool
@@ -112,3 +114,13 @@ buildIndex idx = A.toJSONList $ map entryView sortedIdx
           "id" .= C.i_id ie,
           "creation_date" .= C.i_creation ie
         ]
+
+-- Get a JSON document with an index of available files in the cabinet.
+scrapeMetadata :: C.Metadata -> A.Value
+scrapeMetadata md =
+  A.object
+    [ "in_use" .= C.m_in_use md,
+      "in_use_at_last_gc" .= C.m_in_use_at_last_gc md,
+      "gc_interval" .= C.m_gc_interval md,
+      "gc_prop" .= C.m_gc_prop md
+    ]
