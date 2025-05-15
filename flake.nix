@@ -4,7 +4,7 @@
   outputs = { self, nixpkgs }: {
     packages.x86_64-linux.backend =
       let pkgs = nixpkgs.legacyPackages.x86_64-linux;
-      in import ./backend.nix { inherit pkgs; };
+      in import ./backend { inherit pkgs; };
 
     packages.x86_64-linux.frontend =
       let pkgs = nixpkgs.legacyPackages.x86_64-linux;
