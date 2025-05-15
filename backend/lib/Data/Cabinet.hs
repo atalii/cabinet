@@ -149,7 +149,7 @@ addToPool fp fb =
             { p_by_uuid = p_by_uuid',
               p_by_date = p_by_date',
               p_in_use = p_in_use fp' - saved,
-              p_in_use_at_last_gc = p_in_use_at_last_gc fp',
+              p_in_use_at_last_gc = p_in_use fp',
               p_gc_interval = p_gc_interval fp',
               p_gc_prop = p_gc_prop fp'
             }
