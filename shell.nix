@@ -7,4 +7,6 @@ pkgs.mkShell {
 
     nodejs
   ];
+
+  env.CABINET_PORT = 6446;
 }
