@@ -31,6 +31,7 @@
 		color: inherit;
 
 		font-size: 14pt;
+		column-gap: 8px;
 	}
 
 	a.file-entry > .right {
