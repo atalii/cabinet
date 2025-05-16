@@ -47,9 +47,9 @@
 			<p>{data.message}</p>
 		{/if}
 	</div>
-
-	<FileList filelist={data.index} />
 </form>
+
+<FileList filelist={data.index} />
 
 <style>
 	div.status-message {
