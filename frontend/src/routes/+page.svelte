@@ -1,12 +1,10 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	import FileList from '$lib/FileList.svelte';
-	import FileUpload from '$lib/FileUpload.svelte';
 	let { data }: PageProps = $props();
 	let statusClass = data.success ? 'status-success' : 'status-failure';
 </script>
 
-<FileUpload />
 <div class="status-message {statusClass}">
 	{#if data.message}
 		<p>{data.message}</p>
@@ -18,14 +16,13 @@
 	div.status-message {
 		display: none;
 
-		border: 1px solid #5b5bbb !important;
-		border-radius: 0.25rem !important;
+		border: 1px solid black;
 		padding-left: 1rem;
 		padding-right: 1rem;
 	}
 
 	div.status-success {
-		background-color: #eaffe4;
+		background-color: #eefff5;
 	}
 
 	div.status-failure {

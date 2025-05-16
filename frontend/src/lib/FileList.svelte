@@ -35,7 +35,7 @@
 	}
 
 	a.file-entry > .right {
-		color: #5b5bbb;
+		color: #21689b;
 	}
 
 	a.file-entry > .left {

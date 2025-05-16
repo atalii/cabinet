@@ -26,6 +26,9 @@
 		<input type="submit" class="submit" value="Upload files." />
 	</div>
 
+	{#if files.accepted.length != 0}
+		<p>Uploading:</p>
+	{/if}
 	<ul class="files">
 		{#each files.accepted as file}
 			<li>{file.path}</li>
@@ -46,9 +49,8 @@
 	}
 
 	.submit {
-		border: 1px solid #5b5bbb;
-		border-radius: 0.25rem;
-		background-color: #eaffe4;
+		border: 1px solid #f6ae2d;
+		background-color: #ffffff;
 		padding-left: 1rem;
 		padding-right: 1rem;
 
@@ -57,19 +59,20 @@
 
 	.submit:hover {
 		cursor: pointer;
+		background-color: #f0dfc2;
 	}
 
 	:global {
 		.file-input {
-			border: 1px solid #5b5bbb !important;
-			border-radius: 0.25rem !important;
-			background-color: #f2f2f2 !important;
+			border: 1px solid #f6ae2d !important;
+			background-color: #ffffff !important;
 			align-items: start !important;
 			padding: 1rem !important;
 		}
 
 		.file-input:hover {
 			cursor: pointer;
+			background-color: #f0dfc2 !important;
 		}
 
 		/* Using :has makes sure that we don't erroneously style empty
@@ -80,7 +83,6 @@
 			margin-top: 1rem;
 			background-color: #f9f9f9;
 			border: 1px solid #5b5b5b;
-			border-radius: 0.25rem;
 
 			display: flex;
 			row-gap: 0.35rem;
