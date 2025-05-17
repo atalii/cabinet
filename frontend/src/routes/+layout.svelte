@@ -51,7 +51,7 @@
 		}
 
 		main > div.content {
-			max-width: 8.5in;
+			width: 8.5in;
 		}
 	}
 
