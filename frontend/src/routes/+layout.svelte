@@ -36,7 +36,9 @@
 
 	@media (max-width: 860px) {
 		main {
-			flex-direction: column-reverse;
+			flex-direction: column;
+			min-height: 100vh;
+			justify-content: space-between;
 		}
 
 		main > div.sidebar {
