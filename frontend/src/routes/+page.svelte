@@ -5,6 +5,8 @@
 	let statusClass = data.success ? 'status-success' : 'status-failure';
 </script>
 
+<title>Cabinet &mdash; Index</title>
+
 <div class="status-message {statusClass}">
 	{#if data.message}
 		<p>{data.message}</p>
