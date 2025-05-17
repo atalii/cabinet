@@ -1,16 +1,21 @@
 <script>
 	import '@fontsource/source-sans-pro';
 	import FileUpload from '$lib/FileUpload.svelte';
+	import BackendMetadata from '$lib/BackendMetadata.svelte';
+
+	const props = $props();
+	const { backendMetadata } = props.data;
 </script>
 
 <div class="sidebar"></div>
 
 <main>
 	<div class="content">
-		<slot />
+		{@render props.children()}
 	</div>
 	<div class="sidebar">
 		<FileUpload />
+		<BackendMetadata data={backendMetadata} />
 	</div>
 </main>
 
@@ -46,8 +51,9 @@
 	@media not (max-width: 860px) {
 		main > div.sidebar {
 			width: 30%;
-			height: 100vh;
+			height: calc(100vh - 2rem);
 			border-left: 1px solid #8f8f8f;
+			justify-content: space-between;
 		}
 
 		main > div.content {
@@ -56,6 +62,8 @@
 	}
 
 	main > div.sidebar {
+		display: flex;
+		flex-direction: column;
 		padding: 1rem;
 		background-color: #f8f8f8;
 	}
