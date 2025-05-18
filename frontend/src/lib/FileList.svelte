@@ -30,10 +30,10 @@
 	}
 
 	a.file-entry {
-		display: flex;
+		display: grid;
+		grid-template-columns: 1fr auto;
 		width: 100%;
 		text-decoration: none;
-		justify-content: space-between;
 		color: inherit;
 
 		font-size: 14pt;
@@ -46,10 +46,7 @@
 	}
 
 	a.file-entry > .left {
-		/* By default, a flex child has a min-width of auto, which
-		 * means that overly long children can break out of the
-		 * container. */
-		min-width: 0;
+		text-wrap: nowrap;
 		overflow: scroll;
 		scrollbar-width: thin;
 	}
