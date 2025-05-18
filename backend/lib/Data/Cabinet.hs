@@ -13,6 +13,7 @@ module Data.Cabinet
     Metadata (..),
     FilePool,
     FileBuf,
+    runGc,
   )
 where
 
@@ -141,42 +142,8 @@ addToPool fp fb =
     runAddition uuid old =
       let new = addToPool' uuid old
        in if m_in_use (p_md new) - m_in_use (p_md old) >= m_gc_interval (p_md new)
-            then runGc new
+            then runGc' new
             else new
-
-    runGc :: FilePool' -> FilePool'
-    runGc fp' =
-      let by_date = p_by_date fp'
-          dates = Map.keys by_date
-          numToClean = length dates * m_gc_prop (p_md fp') `div` 100
-          (targets, p_by_date') = deleteOldest numToClean by_date
-          (p_by_uuid', saved) = deleteAll targets (p_by_uuid fp')
-       in FilePool'
-            { p_by_uuid = p_by_uuid',
-              p_by_date = p_by_date',
-              p_md =
-                Metadata
-                  { m_in_use = m_in_use (p_md fp') - saved,
-                    m_in_use_at_last_gc = m_in_use (p_md fp'),
-                    m_gc_interval = m_gc_interval (p_md fp'),
-                    m_gc_prop = m_gc_prop (p_md fp')
-                  }
-            }
-
-    deleteAll :: (Ord k) => [k] -> Map.Map k FileBuf -> (Map.Map k FileBuf, Int)
-    deleteAll [] m = (m, 0)
-    deleteAll (x : xs) m =
-      let size = B.length $ f_data $ m Map.! x
-          m' = Map.delete x m
-          (m'', acc) = deleteAll xs m'
-       in (m'', acc + size)
-
-    deleteOldest :: Int -> Map.Map k v -> ([v], Map.Map k v)
-    deleteOldest 0 m = ([], m)
-    deleteOldest n m =
-      let ((_, v), m') = Map.deleteFindMin m
-          (targets, m'') = deleteOldest (n - 1) m'
-       in (v : targets, m'')
 
     addToPool' :: UUID.UUID -> FilePool' -> FilePool'
     addToPool' uuid fp' =
@@ -205,6 +172,43 @@ poolLookup fp uuid = atomically $ fmap poolLookup' (readTVar fp)
 
 poolMetadata :: FilePool -> IO Metadata
 poolMetadata fp = atomically $ fmap p_md (readTVar fp)
+
+runGc :: FilePool -> IO ()
+runGc fp = atomically $ modifyTVar fp runGc'
+
+runGc' :: FilePool' -> FilePool'
+runGc' fp' =
+  let by_date = p_by_date fp'
+      dates = Map.keys by_date
+      numToClean = length dates * m_gc_prop (p_md fp') `div` 100
+      (targets, p_by_date') = deleteOldest numToClean by_date
+      (p_by_uuid', saved) = deleteAll targets (p_by_uuid fp')
+   in FilePool'
+        { p_by_uuid = p_by_uuid',
+          p_by_date = p_by_date',
+          p_md =
+            Metadata
+              { m_in_use = m_in_use (p_md fp') - saved,
+                m_in_use_at_last_gc = m_in_use (p_md fp'),
+                m_gc_interval = m_gc_interval (p_md fp'),
+                m_gc_prop = m_gc_prop (p_md fp')
+              }
+        }
+  where
+    deleteAll :: (Ord k) => [k] -> Map.Map k FileBuf -> (Map.Map k FileBuf, Int)
+    deleteAll [] m = (m, 0)
+    deleteAll (x : xs) m =
+      let size = B.length $ f_data $ m Map.! x
+          m' = Map.delete x m
+          (m'', acc) = deleteAll xs m'
+       in (m'', acc + size)
+
+    deleteOldest :: Int -> Map.Map k v -> ([v], Map.Map k v)
+    deleteOldest 0 m = ([], m)
+    deleteOldest n m =
+      let ((_, v), m') = Map.deleteFindMin m
+          (targets, m'') = deleteOldest (n - 1) m'
+       in (v : targets, m'')
 
 poolIndex :: FilePool -> IO Index
 poolIndex fp = atomically $ fmap poolIndex' (readTVar fp)
