@@ -54,8 +54,9 @@ serve pool =
     get "/files/by-uuid/:uuid" getByUUID
     get "/files/by-uuid/:uuid/:fname" getByUUID
 
-    post "/gc/trigger" $ liftIO $ C.runGc pool
-
+    post "/gc/trigger" $ do
+      liftIO $ C.runGc pool
+      redirect "/" -- everything is the front end's problem now
     post "/set-attrs/by-uuid/:uuid" $ do
       public <- formCheckBoxValue "public"
       uuid <- captureParam "uuid"

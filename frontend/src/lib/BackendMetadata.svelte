@@ -20,21 +20,57 @@
 		<span class="key">Total Stored</span>
 		<span class="val">{formatByteValue(data.in_use)}</span>
 	</div>
+	<form action="/api/gc/trigger" method="post">
+		<input type="submit" value="Trigger GC." />
+	</form>
 </div>
 
 <style>
-	div.infobox {
-		width: calc(100% - 40px);
+	div.infobox > * {
 		background-color: #ffffff;
-		display: flex;
 		border: 1px solid #f6ae2d;
 		overflow: scroll;
 		padding: 20px;
+		width: 100%;
+	}
+
+	div.infobox > div.attr {
+		width: calc(100% - 40px);
+	}
+
+	div.infobox > form {
+		padding: 0;
+		margin: 0;
+	}
+
+	div.infobox {
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		row-gap: 20px;
+	}
+
+	input[type='submit'] {
+		padding: 20px;
+		width: 100%;
+		height: 100%;
+		font-family: inherit;
+		font-size: inherit;
+		text-align: left;
+		border: none;
+		background: none;
+	}
+	input[type='submit']:hover {
+		cursor: pointer;
+	}
+
+	div.infobox > *:hover {
+		background-color: #f0dfc2;
 	}
 
 	div.attr {
-		width: 100%;
-		display: flex;
+		display: grid;
+		grid-template-columns: 1fr auto;
 		justify-content: space-between;
 	}
 </style>
