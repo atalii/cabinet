@@ -35,6 +35,7 @@
 	},
 	"dependencies": {
 		"@fontsource/open-sans": "^5.2.5",
+		"@fontsource/source-code-pro": "^5.2.5",
 		"svelte-file-dropzone": "^2.0.9"
 	}
 }
