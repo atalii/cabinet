@@ -11,7 +11,7 @@
 		}
 
 		const unit = prefixes[prefixIdx];
-		return `${Math.round(bytes)}${unit}`;
+		return `${bytes.toPrecision(4)}${unit}`;
 	};
 </script>
 
@@ -19,6 +19,15 @@
 	<div class="attr">
 		<span class="key">Total Stored</span>
 		<span class="val">{formatByteValue(data.in_use)}</span>
+
+		<span class="key">Stored at Last GC</span>
+		<span class="val">{formatByteValue(data.in_use_at_last_gc)}</span>
+
+		<span class="key">GC Interval</span>
+		<span class="val">{formatByteValue(data.gc_interval)}</span>
+
+		<span class="key">GC Proportion</span>
+		<span class="val">{data.gc_prop}&percnt;</span>
 	</div>
 	<form action="/api/gc/trigger" method="post">
 		<input type="submit" value="Trigger GC." />
@@ -50,6 +59,10 @@
 		row-gap: 20px;
 	}
 
+	span.val {
+		text-align: right;
+	}
+
 	input[type='submit'] {
 		padding: 20px;
 		width: 100%;
@@ -62,10 +75,6 @@
 	}
 	input[type='submit']:hover {
 		cursor: pointer;
-	}
-
-	div.infobox > *:hover {
-		background-color: #f0dfc2;
 	}
 
 	div.attr {
