@@ -51,7 +51,8 @@ serve pool =
     get "/index" $ idx >>= json . buildIndex
     get "/metadata" $ poolMetadata >>= json . scrapeMetadata
 
-    get "/files/by-uuid/:uuid/:fname?" getByUUID
+    get "/files/by-uuid/public/:uuid/:fname?" $ getByUUID True
+    get "/files/by-uuid/:uuid/:fname?" $ getByUUID False
 
     post "/gc/trigger" $ do
       liftIO $ C.runGc pool
@@ -78,14 +79,17 @@ serve pool =
     formParseCheckBox (Just "on") = True
     formParseCheckBox _ = False
 
-    getByUUID :: ActionM ()
-    getByUUID =
+    getByUUID :: Bool -> ActionM ()
+    getByUUID mustBePublic =
       captureParam "uuid"
         >>= liftIO . C.poolLookup pool . unwrapUUID
         >>= \case
-          Just (C.IndexEntry _ content_type _ _ _ _, content) ->
-            setHeader "Content-Type" (L.fromStrict $ E.decodeUtf8 content_type)
-              >> raw (BL.fromStrict content)
+          Just (C.IndexEntry _ content_type _ _ public _, content) ->
+            if mustBePublic && not public
+              then status forbidden403
+              else
+                setHeader "Content-Type" (L.fromStrict $ E.decodeUtf8 content_type)
+                  >> raw (BL.fromStrict content)
           Nothing -> status notFound404
 
     upload [] = return NoFiles

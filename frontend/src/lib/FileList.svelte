@@ -7,6 +7,10 @@
 	const ambiguate = (time: string) => {
 		return new Date(time).toLocaleString(undefined, { timeZoneName: 'short' });
 	};
+
+	const urlForFile = (file) => {
+		return `/api/files/by-uuid/${file.is_public ? 'public/' : ''}${file.id}/${file.name}`;
+	};
 </script>
 
 <ul class="file-index">
@@ -14,7 +18,7 @@
 		<li>
 			<details>
 				<summary>
-					<a href="/api/files/by-uuid/{file.id}/{file.name}" class="file-entry">
+					<a href={urlForFile(file)} class="file-entry">
 						<span class="left">{file.name}</span>
 						<span class="right">{ambiguate(file.creation_date)}</span>
 					</a>
