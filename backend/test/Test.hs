@@ -21,7 +21,7 @@ basicInsert = TestCase $ do
 
   received_contents <- C.poolLookup pool uuid
   case received_contents of
-    Just (C.IndexEntry name content_type idx_uuid _, received) -> do
+    Just (C.IndexEntry name content_type idx_uuid _ _ _, received) -> do
       assertEqual "expected name to match." name "test"
       assertEqual "expected content-type match." content_type "text/plain"
       assertEqual "expected UUID to match." idx_uuid uuid
@@ -30,7 +30,7 @@ basicInsert = TestCase $ do
 
   idx <- C.poolIndex pool
   case idx of
-    [C.IndexEntry name content_type idx_uuid _] -> do
+    [C.IndexEntry name content_type idx_uuid _ _ _] -> do
       assertEqual "expected name to be unchanged." name "test"
       assertEqual "expected content-type to be unchanged." content_type "text/plain"
       assertEqual "returned UUID doesn't match." idx_uuid uuid
@@ -62,7 +62,7 @@ gcCycle = TestCase $ do
   idx <- C.poolIndex pool
   assertBool
     "first inserted file should have been GC'd."
-    (all (\(C.IndexEntry _ _ uuid _) -> uuid /= firstUuid) idx)
+    (all (\(C.IndexEntry _ _ uuid _ _ _) -> uuid /= firstUuid) idx)
 
   return ()
 
