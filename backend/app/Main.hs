@@ -126,8 +126,8 @@ buildIndex idx = A.toJSONList $ map entryView sortedIdx
 scrapeMetadata :: C.Metadata -> A.Value
 scrapeMetadata md =
   A.object
-    [ "in_use" .= C.m_in_use md,
-      "in_use_at_last_gc" .= C.m_in_use_at_last_gc md,
-      "gc_interval" .= C.m_gc_interval md,
-      "gc_prop" .= C.m_gc_prop md
+    [ "in_use" .= C._m_in_use md,
+      "in_use_at_last_gc" .= C._m_in_use_at_last_gc md,
+      "gc_interval" .= C._m_gc_interval md,
+      "gc_prop" .= C._m_gc_prop md
     ]

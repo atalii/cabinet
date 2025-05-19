@@ -1,6 +1,6 @@
 { mkDerivation, aeson, base, bytestring , containers, HTTP
 , http-types, HUnit, lib, scotty_0_22, stm, text, time
-, uuid, wai-extra
+, uuid, wai-extra, lens
 }:
 mkDerivation {
   pname = "cabinet";
@@ -9,7 +9,7 @@ mkDerivation {
   isLibrary = true;
   isExecutable = true;
   libraryHaskellDepends = [
-    base bytestring containers stm text time uuid
+    base bytestring containers stm text time uuid lens
   ];
   executableHaskellDepends = [
     base aeson bytestring HTTP http-types
