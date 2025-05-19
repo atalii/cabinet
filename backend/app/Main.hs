@@ -51,8 +51,7 @@ serve pool =
     get "/index" $ idx >>= json . buildIndex
     get "/metadata" $ poolMetadata >>= json . scrapeMetadata
 
-    get "/files/by-uuid/:uuid" getByUUID
-    get "/files/by-uuid/:uuid/:fname" getByUUID
+    get "/files/by-uuid/:uuid/:fname?" getByUUID
 
     post "/gc/trigger" $ do
       liftIO $ C.runGc pool
