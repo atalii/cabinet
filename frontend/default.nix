@@ -5,7 +5,7 @@ pkgs.buildNpmPackage (finalAttrs: {
   version = "0.1.0";
   src = ./.;
 
-  npmDepsHash = "sha256-iOSY3GfKCcpzl8wICF0qcGSKxvGOdXF/VtNrAthTiQw=";
+  npmDepsHash = "sha256-Vqp78iXwyO/Rp1V8sLnPuhMPQYbpxvU6lCVcr8CkKFE=";
 
   installPhase = ''
     mkdir -p $out/lib
