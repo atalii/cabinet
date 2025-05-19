@@ -59,8 +59,10 @@ serve pool =
       redirect "/" -- everything is the front end's problem now
     post "/set-attrs/by-uuid/:uuid" $ do
       public <- formCheckBoxValue "public"
+      sticky <- formCheckBoxValue "sticky"
       uuid <- captureParam "uuid"
       liftIO $ C.setPublic pool (unwrapUUID uuid) public
+      liftIO $ C.setSticky pool (unwrapUUID uuid) sticky
       redirect "/"
 
     post "/files/upload" $
@@ -82,7 +84,7 @@ serve pool =
       captureParam "uuid"
         >>= liftIO . C.poolLookup pool . unwrapUUID
         >>= \case
-          Just (C.IndexEntry _ content_type _ _, content) ->
+          Just (C.IndexEntry _ content_type _ _ _ _, content) ->
             setHeader "Content-Type" (L.fromStrict $ E.decodeUtf8 content_type)
               >> raw (BL.fromStrict content)
           Nothing -> status notFound404
@@ -115,7 +117,9 @@ buildIndex idx = A.toJSONList $ map entryView sortedIdx
       A.object
         [ "name" .= C.i_name ie,
           "id" .= C.i_id ie,
-          "creation_date" .= C.i_creation ie
+          "creation_date" .= C.i_creation ie,
+          "is_sticky" .= C.i_sticky ie,
+          "is_public" .= C.i_public ie
         ]
 
 -- Get a JSON document with an index of available files in the cabinet.

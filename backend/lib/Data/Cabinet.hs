@@ -9,6 +9,7 @@ module Data.Cabinet
     poolLookup,
     poolMetadata,
     setPublic,
+    setSticky,
     IndexEntry (..),
     Metadata (..),
     FilePool,
@@ -68,7 +69,9 @@ data IndexEntry = IndexEntry
   { i_name :: T.Text,
     i_mime_type :: B.ByteString,
     i_id :: UUID.UUID,
-    i_creation :: UTCTime
+    i_creation :: UTCTime,
+    i_public :: Bool,
+    i_sticky :: Bool
   }
 
 newPool :: IO FilePool
@@ -102,6 +105,29 @@ buildFile f_name f_content_type f_sticky f_data =
           f_public = False,
           f_created_at,
           f_data
+        }
+
+-- Set the sticky flag on a given file.
+setSticky :: FilePool -> UUID.UUID -> Bool -> IO ()
+setSticky fp target val = atomically $ modifyTVar fp runSetPublic
+  where
+    runSetPublic :: FilePool' -> FilePool'
+    runSetPublic fp' =
+      FilePool'
+        { p_by_uuid = M.adjust setPublic' target (p_by_uuid fp'),
+          p_by_date = p_by_date fp',
+          p_md = p_md fp'
+        }
+
+    setPublic' :: FileBuf -> FileBuf
+    setPublic' fb =
+      FileBuf
+        { f_name = f_name fb,
+          f_content_type = f_content_type fb,
+          f_sticky = val,
+          f_public = f_public fb,
+          f_created_at = f_created_at fb,
+          f_data = f_data fb
         }
 
 -- Set the public flag on a given file.
@@ -216,4 +242,12 @@ poolIndex fp = atomically $ fmap poolIndex' (readTVar fp)
     poolIndex' fp' = fmap toEntry ((M.assocs . p_by_uuid) fp')
 
 toEntry :: (UUID.UUID, FileBuf) -> IndexEntry
-toEntry (uuid, f) = IndexEntry (f_name f) (f_content_type f) uuid (f_created_at f)
+toEntry (uuid, f) =
+  IndexEntry
+    { i_name = f_name f,
+      i_mime_type = f_content_type f,
+      i_id = uuid,
+      i_creation = f_created_at f,
+      i_public = f_public f,
+      i_sticky = f_sticky f
+    }
