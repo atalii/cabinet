@@ -66,6 +66,7 @@ data Metadata = Metadata
     _m_gc_prop :: Int
   }
 
+makeLenses ''Metadata
 makeLenses ''FilePool'
 
 -- An index type is a snapshot of a pool at a given time. There's no guarantee
@@ -118,27 +119,22 @@ buildFile f_name' f_content_type' f_sticky' f_data' =
 
 -- Set the sticky flag on a given file.
 setSticky :: FilePool -> UUID.UUID -> Bool -> IO ()
-setSticky fp target val = atomically $ modifyTVar fp runSetPublic
-  where
-    runSetPublic :: FilePool' -> FilePool'
-    runSetPublic fp' =
-      FilePool'
-        { _p_by_uuid = M.adjust (f_sticky .~ val) target (_p_by_uuid fp'),
-          _p_by_date = _p_by_date fp',
-          _p_md = _p_md fp'
-        }
+setSticky fp target val =
+  atomically $
+    modifyTVar fp $
+      runOverUUID target $
+        f_sticky .~ val
 
 -- Set the public flag on a given file.
 setPublic :: FilePool -> UUID.UUID -> Bool -> IO ()
-setPublic fp target val = atomically $ modifyTVar fp runSetPublic
-  where
-    runSetPublic :: FilePool' -> FilePool'
-    runSetPublic fp' =
-      FilePool'
-        { _p_by_uuid = M.adjust (f_public .~ val) target (_p_by_uuid fp'),
-          _p_by_date = _p_by_date fp',
-          _p_md = _p_md fp'
-        }
+setPublic fp target val =
+  atomically $
+    modifyTVar fp $
+      runOverUUID target $
+        f_public .~ val
+
+runOverUUID :: UUID.UUID -> (FileBuf -> FileBuf) -> FilePool' -> FilePool'
+runOverUUID target f = over p_by_uuid $ M.adjust f target
 
 -- Add a FileStore object to a pool and return a unique identifier.
 addToPool :: FilePool -> FileBuf -> IO UUID.UUID
@@ -154,26 +150,21 @@ addToPool fp fb =
     runAddition :: UUID.UUID -> FilePool' -> FilePool'
     runAddition uuid old =
       let new = addToPool' uuid old
-       in if _m_in_use (_p_md new) - _m_in_use (_p_md old) >= _m_gc_interval (_p_md new)
+       in if new ^. (p_md . m_in_use) - old ^. (p_md . m_in_use) >= new ^. (p_md . m_gc_interval)
             then runGc' new
             else new
 
     addToPool' :: UUID.UUID -> FilePool' -> FilePool'
     addToPool' uuid fp' =
-      FilePool'
-        { _p_by_uuid = Map.insert uuid fb (_p_by_uuid fp'),
-          _p_by_date = Map.insert (_f_created_at fb) uuid (_p_by_date fp'),
-          _p_md =
-            Metadata
-              { _m_in_use = _m_in_use (_p_md fp') + B.length (_f_data fb),
-                _m_in_use_at_last_gc = _m_in_use_at_last_gc (_p_md fp'),
-                _m_gc_interval = _m_gc_interval (_p_md fp'),
-                _m_gc_prop = _m_gc_prop (_p_md fp')
-              }
-        }
+      fp'
+        & p_by_uuid %~ Map.insert uuid fb
+        & p_by_date %~ Map.insert (fb ^. f_created_at) uuid
+        & p_md %~ \md ->
+          md
+            & m_in_use +~ B.length (fb ^. f_data)
 
 poolCount :: FilePool -> IO Int
-poolCount fp = atomically $ fmap (M.size . _p_by_uuid) (readTVar fp)
+poolCount fp = atomically $ fmap (M.size . view p_by_uuid) (readTVar fp)
 
 poolLookup :: FilePool -> UUID.UUID -> IO (Maybe (IndexEntry, B.ByteString))
 poolLookup fp uuid = atomically $ fmap poolLookup' (readTVar fp)
@@ -191,22 +182,13 @@ runGc fp = atomically $ modifyTVar fp runGc'
 
 runGc' :: FilePool' -> FilePool'
 runGc' fp' =
-  let by_date = _p_by_date fp'
+  let by_date = fp' ^. p_by_date
       dates = Map.keys by_date
-      numToClean = length dates * _m_gc_prop (_p_md fp') `div` 100
+      numToClean = length dates * (fp' ^. p_md . m_gc_prop) `div` 100
       (targets, p_by_date') = deleteOldest numToClean by_date
       (p_by_uuid', saved) = deleteAll targets (_p_by_uuid fp')
-   in FilePool'
-        { _p_by_uuid = p_by_uuid',
-          _p_by_date = p_by_date',
-          _p_md =
-            Metadata
-              { _m_in_use = _m_in_use (_p_md fp') - saved,
-                _m_in_use_at_last_gc = _m_in_use (_p_md fp'),
-                _m_gc_interval = _m_gc_interval (_p_md fp'),
-                _m_gc_prop = _m_gc_prop (_p_md fp')
-              }
-        }
+   in set p_by_uuid p_by_uuid' fp'
+        & (over p_md (over m_in_use (subtract saved)) . over p_md (\md -> set m_in_use_at_last_gc (md ^. m_in_use) md))
   where
     deleteAll :: (Ord k) => [k] -> Map.Map k FileBuf -> (Map.Map k FileBuf, Int)
     deleteAll [] m = (m, 0)
@@ -226,7 +208,7 @@ runGc' fp' =
 poolIndex :: FilePool -> IO PoolIndex
 poolIndex fp = atomically $ fmap poolIndex' (readTVar fp)
   where
-    poolIndex' fp' = fmap toEntry ((M.assocs . _p_by_uuid) fp')
+    poolIndex' fp' = fmap toEntry ((M.assocs . view p_by_uuid) fp')
 
 toEntry :: (UUID.UUID, FileBuf) -> IndexEntry
 toEntry (uuid, f) =
