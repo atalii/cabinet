@@ -105,9 +105,17 @@ serve pool =
     scottyFileToCabinetFile f =
       C.buildFile
         (E.decodeUtf8 $ fileName f)
-        (fileContentType f)
+        (processMime $ fileContentType f)
         False
         (B.toStrict $ fileContent f)
+
+    -- We want to be able to specify some default parameters for insufficient
+    -- Content-Types. E.g., a text files should always have an encoding specified.
+    -- If this step ever becomes an annoyance, consider having it be configurable
+    -- and correctly parse MIME types, rather than matching on strings.
+    processMime :: B.ByteString -> B.ByteString
+    processMime "text/plain" = "text/plain;charset=UTF-8"
+    processMime a = a
 
 -- Get a JSON document with an index of available files in the cabinet.
 buildIndex :: [C.IndexEntry] -> A.Value
