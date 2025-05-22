@@ -3,24 +3,20 @@
 
   outputs =
     { self, nixpkgs }:
+    let
+      systems = nixpkgs.lib.systems.flakeExposed;
+      forAllSystems = nixpkgs.lib.genAttrs systems;
+      define = f: forAllSystems (system: f nixpkgs.legacyPackages.${system});
+    in
     {
-      packages.x86_64-linux.backend =
-        let
-          pkgs = nixpkgs.legacyPackages.x86_64-linux;
-        in
-        import ./backend { inherit pkgs; };
+      packages = define (pkgs: {
+        backend = import ./backend { inherit pkgs; };
+        frontend = import ./frontend { inherit pkgs; };
+      });
 
-      packages.x86_64-linux.frontend =
-        let
-          pkgs = nixpkgs.legacyPackages.x86_64-linux;
-        in
-        import ./frontend { inherit pkgs; };
-
-      devShells.x86_64-linux.default =
-        let
-          pkgs = nixpkgs.legacyPackages.x86_64-linux;
-        in
-        import ./shell.nix { inherit pkgs; };
+      devShells = define (pkgs: {
+        default = import ./shell.nix { inherit pkgs; };
+      });
 
       nixosModules.cabinet =
         { config, pkgs, ... }:
