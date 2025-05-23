@@ -1,6 +1,20 @@
-{ mkDerivation, aeson, base, bytestring , containers, HTTP
-, http-types, HUnit, lib, scotty_0_22, stm, text, time
-, uuid, wai-extra, lens
+{
+  mkDerivation,
+  aeson,
+  base,
+  bytestring,
+  containers,
+  HTTP,
+  http-types,
+  HUnit,
+  lib,
+  scotty,
+  stm,
+  text,
+  time,
+  uuid,
+  wai-extra,
+  lens,
 }:
 mkDerivation {
   pname = "cabinet";
@@ -9,13 +23,32 @@ mkDerivation {
   isLibrary = true;
   isExecutable = true;
   libraryHaskellDepends = [
-    base bytestring containers stm text time uuid lens
+    base
+    bytestring
+    containers
+    stm
+    text
+    time
+    uuid
+    lens
   ];
   executableHaskellDepends = [
-    base aeson bytestring HTTP http-types
-    scotty_0_22 stm text uuid wai-extra
+    base
+    aeson
+    bytestring
+    HTTP
+    http-types
+    scotty
+    stm
+    text
+    uuid
+    wai-extra
   ];
-  testHaskellDepends = [ base bytestring HUnit ];
+  testHaskellDepends = [
+    base
+    bytestring
+    HUnit
+  ];
   license = lib.licenses.mpl20;
   mainProgram = "cabinet-srv";
 }
