@@ -11,7 +11,10 @@
     {
       packages = define (pkgs: {
         backend = import ./backend { inherit pkgs; };
-        frontend = import ./frontend { inherit pkgs; };
+        frontend = import ./frontend {
+          inherit pkgs;
+          rev = if self ? rev then builtins.substring 0 6 self.rev else "dirty tree";
+        };
       });
 
       devShells = define (pkgs: {

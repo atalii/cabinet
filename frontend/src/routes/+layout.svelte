@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import '@fontsource/source-sans-pro';
 	import FileUpload from '$lib/FileUpload.svelte';
 	import BackendMetadata from '$lib/BackendMetadata.svelte';
@@ -15,7 +15,10 @@
 	</div>
 	<div class="sidebar">
 		<FileUpload />
-		<BackendMetadata data={backendMetadata} />
+		<div>
+			<p class="build-info">Built from {__VERSION__}.</p>
+			<BackendMetadata data={backendMetadata} />
+		</div>
 	</div>
 </main>
 
@@ -74,5 +77,10 @@
 		padding: 1rem;
 		margin-left: auto;
 		margin-right: auto;
+	}
+
+	.build-info {
+		color: #444;
+		text-align: right;
 	}
 </style>
