@@ -2,8 +2,6 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 import { execSync } from 'node:child_process';
 
-console.log(process.env);
-
 const version = process.env.CABINET_FRONTEND_VERSION;
 
 export default defineConfig({
