@@ -185,7 +185,7 @@ runGc' fp' =
   let by_date = fp' ^. p_by_date
       dates = Map.keys by_date
       numToClean = length dates * (fp' ^. p_md . m_gc_prop) `div` 100
-      (targets, p_by_date') = deleteOldest numToClean by_date
+      (targets, p_by_date') = deleteOldest (fp' ^. p_by_uuid) numToClean by_date
       (p_by_uuid', saved) = deleteAll targets (_p_by_uuid fp')
    in set p_by_uuid p_by_uuid' fp'
         & (over p_md (over m_in_use (subtract saved)) . over p_md (\md -> set m_in_use_at_last_gc (md ^. m_in_use) md))
@@ -198,12 +198,13 @@ runGc' fp' =
           (m'', acc) = deleteAll xs m'
        in (m'', acc + size)
 
-    deleteOldest :: Int -> Map.Map k v -> ([v], Map.Map k v)
-    deleteOldest 0 m = ([], m)
-    deleteOldest n m =
+    deleteOldest :: (Ord v) => Map.Map v FileBuf -> Int -> Map.Map k v -> ([v], Map.Map k v)
+    deleteOldest idx 0 m = ([], m)
+    deleteOldest idx n m =
       let ((_, v), m') = Map.deleteFindMin m
-          (targets, m'') = deleteOldest (n - 1) m'
-       in (v : targets, m'')
+          is_sticky = (idx Map.! v) ^. f_sticky
+          (targets, m'') = deleteOldest idx (n - 1) m'
+       in if is_sticky then deleteOldest idx n m' else (v : targets, m'')
 
 poolIndex :: FilePool -> IO PoolIndex
 poolIndex fp = atomically $ fmap poolIndex' (readTVar fp)

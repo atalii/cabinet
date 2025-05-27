@@ -5,6 +5,7 @@ module Main where
 import Control.Monad (replicateM_)
 import qualified Data.ByteString as B
 import qualified Data.Cabinet as C
+import Data.Maybe (isJust)
 import System.Exit (exitFailure, exitSuccess)
 import Test.HUnit
 
@@ -66,10 +67,30 @@ gcCycle = TestCase $ do
 
   return ()
 
+setSticky :: Test
+setSticky = TestCase $ do
+  pool <- C.newPool
+  f <- C.buildFile "test" "text/plain" False ""
+  uuid <- C.addToPool pool f
+
+  replicateM_ 10 $ do
+    x <- C.buildFile "test" "text/plain" False ""
+    C.addToPool pool x
+    return ()
+
+  C.setSticky pool uuid True
+
+  C.runGc pool
+
+  lookuped <- C.poolLookup pool uuid
+  assertBool "stickied file remains." $ isJust lookuped
+
+  return ()
+
 main :: IO ()
 main =
   runTestTT tests >>= \counts ->
     if errors counts + failures counts == 0 then exitSuccess else exitFailure
   where
     tests =
-      TestList [basicInsert, gcCycle]
+      TestList [basicInsert, gcCycle, setSticky]
