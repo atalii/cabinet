@@ -187,7 +187,9 @@ runGc' fp' =
       numToClean = length dates * (fp' ^. p_md . m_gc_prop) `div` 100
       (targets, p_by_date') = deleteOldest (fp' ^. p_by_uuid) numToClean by_date
       (p_by_uuid', saved) = deleteAll targets (_p_by_uuid fp')
-   in set p_by_uuid p_by_uuid' fp'
+   in fp'
+        & p_by_uuid .~ p_by_uuid'
+        & p_by_date .~ p_by_date'
         & (over p_md (over m_in_use (subtract saved)) . over p_md (\md -> set m_in_use_at_last_gc (md ^. m_in_use) md))
   where
     deleteAll :: (Ord k) => [k] -> Map.Map k FileBuf -> (Map.Map k FileBuf, Int)
