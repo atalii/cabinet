@@ -120,29 +120,25 @@ buildFile f_name' f_content_type' f_sticky' f_data' =
 
 -- Set the sticky flag on a given file.
 setSticky :: FilePool -> UUID.UUID -> Bool -> IO ()
-setSticky fp target val =
-  atomically $
-    modifyTVar fp $
-      runOverUUID target $
-        f_sticky .~ val
+setSticky = atomicallySet f_sticky
 
 -- Set the public flag on a given file.
 setPublic :: FilePool -> UUID.UUID -> Bool -> IO ()
-setPublic fp target val =
-  atomically $
-    modifyTVar fp $
-      runOverUUID target $
-        f_public .~ val
+setPublic = atomicallySet f_public
 
+-- Set the MIME type on a given file.
 setMimeType :: FilePool -> UUID.UUID -> B.ByteString -> IO ()
-setMimeType fp target val =
-  atomically $
-    modifyTVar fp $
-      runOverUUID target $
-        f_content_type .~ val
+setMimeType = atomicallySet f_content_type
 
 runOverUUID :: UUID.UUID -> (FileBuf -> FileBuf) -> FilePool' -> FilePool'
 runOverUUID target f = over p_by_uuid $ M.adjust f target
+
+atomicallySet :: ASetter FileBuf FileBuf v v -> FilePool -> UUID.UUID -> v -> IO ()
+atomicallySet lens fp target val =
+  atomically $
+    modifyTVar fp $
+      runOverUUID target $
+        set lens val
 
 -- Add a FileStore object to a pool and return a unique identifier.
 addToPool :: FilePool -> FileBuf -> IO UUID.UUID
