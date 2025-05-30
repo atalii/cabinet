@@ -45,15 +45,31 @@ getPort = fmap (fromMaybe 3000 . (>>= readMaybe)) (lookupEnv "CABINET_PORT")
 serve :: C.FilePool -> IO ()
 serve pool =
   getPort >>= \port -> scotty port $ do
+    --
+    -- These first routes provide a response interpreted by the frontend,
+    -- e.g., during SSR.
+    --
+
     get "/index" $ idx >>= json . buildIndex
     get "/metadata" $ poolMetadata >>= json . scrapeMetadata
+
+    --
+    -- These routes' responses are meant to be consumed by the browser.
+    --
 
     get "/files/by-uuid/public/:uuid/:fname?" $ getByUUID True
     get "/files/by-uuid/:uuid/:fname?" $ getByUUID False
 
+    --
+    -- The remaining routes are used for their side effects. At the end of
+    -- execution, they redirect to '/', which, in a deployment, will be routed
+    -- to the frontend's index via a reverse proxy.
+    --
+
     post "/gc/trigger" $ do
       liftIO $ C.runGc pool
-      redirect "/" -- everything is the front end's problem now
+      redirect "/"
+
     post "/set-attrs/by-uuid/:uuid" $ do
       public <- formCheckBoxValue "public"
       sticky <- formCheckBoxValue "sticky"
@@ -71,8 +87,6 @@ serve pool =
     post "/files/upload" $
       files
         >>= upload
-        -- This is moderately evil, but we never expect /?status=whatever to be
-        -- handled by this server; instead we're redirecting to the frontend.
         >>= redirect . L.append "/?status=" . L.pack . show
   where
     formCheckBoxValue :: L.Text -> ActionM Bool
