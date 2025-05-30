@@ -12,6 +12,7 @@ import qualified Data.Cabinet as C
 import Data.List
 import Data.Maybe (fromMaybe)
 import Data.Ord
+import Data.Text.Encoding (decodeUtf8Lenient)
 import qualified Data.Text.Encoding as E
 import qualified Data.Text.Lazy as L
 import qualified Data.UUID as UUID
@@ -59,6 +60,12 @@ serve pool =
       uuid <- captureParam "uuid"
       liftIO $ C.setPublic pool (unwrapUUID uuid) public
       liftIO $ C.setSticky pool (unwrapUUID uuid) sticky
+      redirect "/"
+
+    post "/set-mime-type/by-uuid/:uuid" $ do
+      mimeType <- formParam "type"
+      uuid <- captureParam "uuid"
+      liftIO $ C.setMimeType pool (unwrapUUID uuid) mimeType
       redirect "/"
 
     post "/files/upload" $
@@ -126,7 +133,8 @@ buildIndex idx = A.toJSONList $ map entryView sortedIdx
           "id" .= C.i_id ie,
           "creation_date" .= C.i_creation ie,
           "is_sticky" .= C.i_sticky ie,
-          "is_public" .= C.i_public ie
+          "is_public" .= C.i_public ie,
+          "mime_type" .= decodeUtf8Lenient (C.i_mime_type ie)
         ]
 
 -- Get a JSON document with an index of available files in the cabinet.

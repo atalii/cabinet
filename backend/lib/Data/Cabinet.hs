@@ -11,6 +11,7 @@ module Data.Cabinet
     poolMetadata,
     setPublic,
     setSticky,
+    setMimeType,
     IndexEntry (..),
     Metadata (..),
     FilePool,
@@ -132,6 +133,13 @@ setPublic fp target val =
     modifyTVar fp $
       runOverUUID target $
         f_public .~ val
+
+setMimeType :: FilePool -> UUID.UUID -> B.ByteString -> IO ()
+setMimeType fp target val =
+  atomically $
+    modifyTVar fp $
+      runOverUUID target $
+        f_content_type .~ val
 
 runOverUUID :: UUID.UUID -> (FileBuf -> FileBuf) -> FilePool' -> FilePool'
 runOverUUID target f = over p_by_uuid $ M.adjust f target

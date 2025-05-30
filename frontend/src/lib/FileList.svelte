@@ -37,6 +37,13 @@
 					</ul>
 					<input type="submit" value="Update attributes." />
 				</form>
+				<form class="mimeupdate" action="/api/set-mime-type/by-uuid/{file.id}" method="post">
+					<div>
+						<label for="type">MIME Type:</label>
+						<input name="type" type="text" value={file.mime_type} />
+					</div>
+					<input type="submit" value="Update MIME type." />
+				</form>
 			</details>
 		</li>
 	{/each}
@@ -100,13 +107,36 @@
 		text-decoration: underline;
 	}
 
-	form.attrs {
+	details > form {
 		display: flex;
 		align-items: flex-end;
 		margin-top: 0.5rem;
 		padding: 1rem;
 
 		background-color: #f8f8f8;
+	}
+
+	form.mimeupdate {
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	form.mimeupdate > * {
+		width: 100%;
+	}
+
+	form.mimeupdate > div {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		width: 100%;
+	}
+
+	input[type='text'] {
+		flex-grow: 1;
+		font-family: inherit;
+		font-size: inherit;
+		padding: 10px;
 	}
 
 	form.attrs > ul {
