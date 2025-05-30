@@ -7,7 +7,6 @@ author:             Tali Auster
 maintainer:         me@tali.network
 build-type:         Simple
 extra-doc-files:    CHANGELOG.md
-data-files: static/*.css
 
 common warnings
     ghc-options: -Wall
@@ -30,7 +29,7 @@ library
 executable cabinet-srv
     import:           warnings
     main-is:          Main.hs
-    other-modules:    Paths_cabinet, Resources
+    other-modules:    Paths_cabinet
     build-depends:
       base >= 4.18,
       bytestring >= 0.10,

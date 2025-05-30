@@ -17,13 +17,9 @@ import qualified Data.Text.Lazy as L
 import qualified Data.UUID as UUID
 import Network.HTTP.Types.Status
 import Network.Wai.Parse
-import Resources (loadResource)
 import System.Environment (lookupEnv)
 import Text.Read (readMaybe)
 import Web.Scotty
-
-styleSheet :: IO B.ByteString
-styleSheet = loadResource "styles.css"
 
 data UploadResult = UploadOk | UploadEmpty | NoFiles
   deriving (Read, Show)
