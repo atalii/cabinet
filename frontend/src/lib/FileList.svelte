@@ -11,11 +11,65 @@
 	const urlForFile = (file) => {
 		return `/api/files/by-uuid/${file.is_public ? 'public/' : ''}${file.id}/${file.name}`;
 	};
+
+	type Dir = 'Up' | 'Down';
+	type Key = 'Name' | 'Date';
+
+	const sort = (dir: Dir, key: Key) => {
+		const assets = document.getElementById('assets');
+		if (!assets) return;
+		[...assets.children]
+			.sort((a, b) => {
+				let values = dir === 'Up' ? [1, -1] : [-1, 1];
+				let getter =
+					key === 'Name'
+						? (a: Element) => a.querySelector('details > summary > a > span.left')
+						: (a: Element) => a.querySelector('details > summary > a > span.right');
+
+				let acontent = getter(a)?.textContent;
+				let bcontent = getter(b)?.textContent;
+
+				if (!acontent) {
+					return values[1];
+				}
+
+				if (!bcontent) {
+					return values[0];
+				}
+
+				if (acontent > bcontent) {
+					return values[0];
+				} else if (bcontent > acontent) {
+					return values[1];
+				} else {
+					return 0;
+				}
+			})
+			.forEach((node) => assets.appendChild(node));
+	};
+
+	let filterString = $state('');
 </script>
 
-<ul class="file-index">
+<div class="panel">
+	<input type="text" placeholder="Filter list." bind:value={filterString} />
+	<div class="sort-buttons">
+		<span>
+			Sort by name:
+			<button onclick={(_) => sort('Up', 'Name')}>↑</button>
+			<button onclick={(_) => sort('Down', 'Name')}>↓</button>
+		</span>
+		<span>
+			Sort by date:
+			<button onclick={(_) => sort('Up', 'Date')}>↑</button>
+			<button onclick={(_) => sort('Down', 'Date')}>↓</button>
+		</span>
+	</div>
+</div>
+
+<ul class="file-index" id="assets">
 	{#each filelist as file}
-		<li>
+		<li class={file.name.includes(filterString) ? null : 'hidden'}>
 			<details>
 				<summary>
 					<a href={urlForFile(file)} class="file-entry">
@@ -50,6 +104,10 @@
 </ul>
 
 <style>
+	.hidden {
+		display: none;
+	}
+
 	ul.file-index {
 		padding: 0;
 	}
@@ -156,5 +214,23 @@
 	input[type='submit']:hover {
 		cursor: pointer;
 		background-color: #f0dfc2;
+	}
+
+	div.panel {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.5rem;
+
+		margin-top: 0.5rem;
+		padding: 1rem;
+
+		background-color: #f8f8f8;
+	}
+
+	div.sort-buttons {
+		display: flex;
+		flex-direction: column;
+		align-items: end;
+		gap: 0.5rem;
 	}
 </style>
