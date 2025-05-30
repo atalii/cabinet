@@ -1,6 +1,12 @@
 <script lang="ts">
 	import '@fontsource/source-code-pro';
 
+	interface File {
+		is_public: string;
+		id: string;
+		name: string;
+	}
+
 	const props = $props();
 	const filelist = props.filelist;
 
@@ -8,7 +14,7 @@
 		return new Date(time).toLocaleString(undefined, { timeZoneName: 'short' });
 	};
 
-	const urlForFile = (file) => {
+	const urlForFile = (file: File) => {
 		return `/api/files/by-uuid/${file.is_public ? 'public/' : ''}${file.id}/${file.name}`;
 	};
 
