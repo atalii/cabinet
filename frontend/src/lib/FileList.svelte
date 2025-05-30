@@ -49,6 +49,8 @@
 
 	ul.file-index > li {
 		list-style-type: none;
+		padding: 1rem;
+		border-bottom: 1px solid #a4a4a4;
 	}
 
 	summary {
@@ -91,6 +93,7 @@
 		text-wrap: nowrap;
 		overflow: scroll;
 		scrollbar-width: thin;
+		mask-image: linear-gradient(to right, #fff 80%, transparent);
 	}
 
 	a.file-entry:hover {
@@ -100,12 +103,10 @@
 	form.attrs {
 		display: flex;
 		align-items: flex-end;
-		padding-top: 1rem;
-		padding-bottom: 1rem;
+		margin-top: 0.5rem;
+		padding: 1rem;
 
-		/* Line up with the content of the summary, after the
-		 * ::before. */
-		padding-left: 2rem;
+		background-color: #f8f8f8;
 	}
 
 	form.attrs > ul {
