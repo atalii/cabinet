@@ -50,7 +50,7 @@
 		}
 
 		main > div.content {
-			width: calc(100vw - 2rem);
+			width: 100%;
 		}
 	}
 	@media not (max-width: 860px) {
@@ -63,6 +63,7 @@
 
 		main > div.content {
 			width: 8.5in;
+			padding: 1rem;
 		}
 	}
 
@@ -74,7 +75,6 @@
 	}
 
 	main > div.content {
-		padding: 1rem;
 		margin-left: auto;
 		margin-right: auto;
 	}

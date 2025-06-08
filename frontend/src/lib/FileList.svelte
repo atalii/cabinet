@@ -147,7 +147,8 @@
 		display: inline-grid;
 		width: calc(100% - 2rem);
 
-		grid-template-columns: 1fr auto;
+		grid-template-columns: auto 1fr;
+
 		text-decoration: none;
 		color: inherit;
 
@@ -158,6 +159,12 @@
 	a.file-entry > .right {
 		color: #21689b;
 		font-family: 'Source Code Pro', 'monospace';
+
+		text-wrap: nowrap;
+		overflow: scroll;
+		scrollbar-width: thin;
+
+		text-align: right;
 	}
 
 	a.file-entry > .left {
@@ -174,10 +181,9 @@
 	details > form {
 		display: flex;
 		align-items: flex-end;
-		margin-top: 0.5rem;
 		padding: 1rem;
-
 		background-color: #f8f8f8;
+		margin-top: 0.5rem;
 	}
 
 	form.mimeupdate {
@@ -227,7 +233,6 @@
 		align-items: flex-start;
 		gap: 0.5rem;
 
-		margin-top: 0.5rem;
 		padding: 1rem;
 
 		background-color: #f8f8f8;
@@ -238,5 +243,15 @@
 		flex-direction: column;
 		align-items: end;
 		gap: 0.5rem;
+	}
+
+	@media not (max-width: 860px) {
+		div.panel {
+			margin-top: 0.5rem;
+		}
+
+		a.file-entry {
+			grid-template-columns: 1fr auto;
+		}
 	}
 </style>
