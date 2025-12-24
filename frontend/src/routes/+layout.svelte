@@ -59,6 +59,7 @@
 			height: calc(100vh - 2rem);
 			border-left: 1px solid #8f8f8f;
 			justify-content: space-between;
+			overflow-y: scroll;
 		}
 
 		main > div.content {
