@@ -14,11 +14,9 @@
 		{@render props.children()}
 	</div>
 	<div class="sidebar">
+		<p class="build-info">Built from {__VERSION__}.</p>
 		<FileUpload />
-		<div>
-			<p class="build-info">Built from {__VERSION__}.</p>
-			<BackendMetadata data={backendMetadata} />
-		</div>
+		<BackendMetadata data={backendMetadata} />
 	</div>
 </main>
 
@@ -58,7 +56,7 @@
 			width: 30%;
 			height: calc(100vh - 2rem);
 			border-left: 1px solid #8f8f8f;
-			justify-content: space-between;
+			justify-content: flex-end;
 		}
 
 		main > div.content {
