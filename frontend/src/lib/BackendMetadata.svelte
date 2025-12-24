@@ -38,7 +38,6 @@
 	div.infobox > * {
 		background-color: #ffffff;
 		border: 1px solid #f6ae2d;
-		overflow: scroll;
 		padding: 20px;
 		width: 100%;
 	}
