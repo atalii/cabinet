@@ -15,8 +15,10 @@
 	</div>
 	<div class="sidebar">
 		<p class="build-info">Built from {__VERSION__}.</p>
-		<FileUpload />
-		<BackendMetadata data={backendMetadata} />
+		<div>
+			<FileUpload />
+			<BackendMetadata data={backendMetadata} />
+		</div>
 	</div>
 </main>
 
@@ -56,7 +58,7 @@
 			width: 30%;
 			height: calc(100vh - 2rem);
 			border-left: 1px solid #8f8f8f;
-			justify-content: flex-end;
+			justify-content: space-between;
 		}
 
 		main > div.content {

@@ -18,14 +18,6 @@
 </script>
 
 <form action="/api/files/upload" method="post" enctype="multipart/form-data">
-	<div class="file-menu">
-		<Dropzone containerClasses="file-input" on:drop={handleFilesSelect} name="files">
-			<span class="form-copy">Select files.</span>
-		</Dropzone>
-
-		<input type="submit" class="submit" value="Upload files." />
-	</div>
-
 	{#if files.accepted.length != 0}
 		<p>Uploading:</p>
 	{/if}
@@ -39,9 +31,21 @@
 			<li>{file.path}</li>
 		{/each}
 	</ul>
+
+	<div class="file-menu">
+		<Dropzone containerClasses="file-input" on:drop={handleFilesSelect} name="files">
+			<span class="form-copy">Select files.</span>
+		</Dropzone>
+
+		<input type="submit" class="submit" value="Upload files." />
+	</div>
 </form>
 
 <style>
+	form {
+		padding-bottom: 20px;
+	}
+
 	.file-menu {
 		display: flex;
 		flex-direction: row;
