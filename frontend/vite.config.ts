@@ -11,11 +11,11 @@ export default defineConfig({
 			'/api': {
 				target: 'http://localhost:6446',
 				changeOrigin: true,
-				rewrite: (path) => path.replace(/^\/api/, ''),
-			},
+				rewrite: (path) => path.replace(/^\/api/, '')
+			}
 		}
 	},
 	define: {
-		__VERSION__: JSON.stringify(version),
-	},
+		__VERSION__: JSON.stringify(version)
+	}
 });
