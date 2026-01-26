@@ -18,12 +18,19 @@ const fromStatus: String = (val) => {
 };
 
 export const load: PageLoad = async ({ fetch, url }) => {
-	const status = url.searchParams.get('status');
-	const index = await fetch('/api/index');
+	try {
+		const status = url.searchParams.get('status');
+		const index = await fetch('/api/index');
+		if (!index.ok) {
+			throw Error(`Response status: ${md.status}`)
+		}
 
-	return {
-		success: status === 'UploadOk',
-		message: fromStatus(status),
-		index: await index.json()
-	};
+		return {
+			success: status === 'UploadOk',
+			message: fromStatus(status),
+			index: await index.json()
+		};
+	} catch (e) {
+		error(500, `Couldn't fetch index from backend API: ${e.message}`)
+	}
 };
