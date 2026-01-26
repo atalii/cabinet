@@ -40,7 +40,7 @@ main :: IO ()
 main = C.newPool >>= serve
 
 getPort :: IO Int
-getPort = fmap (fromMaybe 3000 . (>>= readMaybe)) (lookupEnv "CABINET_PORT")
+getPort = fmap (fromMaybe 3000 . (>>= readMaybe)) (lookupEnv "CABINET_BACKEND_PORT")
 
 serve :: C.FilePool -> IO ()
 serve pool =
