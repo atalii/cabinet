@@ -48,7 +48,7 @@
               ExecStart = "${self.packages.x86_64-linux.backend}/bin/cabinet-srv";
             };
 
-            environment.CABINET_PORT = "6446";
+            environment.CABINET_BACKEND_PORT = "6446";
           };
         };
     };
