@@ -106,6 +106,7 @@ serve pool =
               then status forbidden403
               else
                 setHeader "Content-Type" (L.fromStrict $ E.decodeUtf8 content_type)
+                  >> setHeader  "Content-Length" (L.show $ B.length content)
                   >> raw (BL.fromStrict content)
           Nothing -> status notFound404
 
